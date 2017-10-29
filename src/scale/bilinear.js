@@ -68,20 +68,21 @@ function scale(data, width, height, newData, newWidth, newHeight) {
         
         for (let j = 0; j <= 3; j += 1) {
             // 两套公式
-            // const partV = v * ((u1 * data[index01 + j]) + (u * data[index11 + j]));
-            // const partV1 = v1 * ((u1 * data[index00 + j]) + (u * data[index10 + j]));
-            // dstData[dstI + j] = partV + partV1;
-            const partU = u * ((v1 * data[index10 + j]) + (v * data[index11 + j]));
-            const partU1 = u1 * ((v1 * data[index00 + j]) + (v * data[index01 + j]));
+            const partV = v * ((u1 * data[index01 + j]) + (u * data[index11 + j]));
+            const partV1 = v1 * ((u1 * data[index00 + j]) + (u * data[index10 + j]));
             
-            dstData[dstI + j] = partU + partU1;
+            dstData[dstI + j] = partV + partV1;
+            // const partU = u * ((v1 * data[index10 + j]) + (v * data[index11 + j]));
+            // const partU1 = u1 * ((v1 * data[index00 + j]) + (v * data[index01 + j]));
+            
+            // dstData[dstI + j] = partU + partU1;
         }
     };
     
     // 区块
-    for (let x = 0; x < newWidth; x += 1) {
-        for (let y = 0; y < newHeight; y += 1) {
-            mapData(x, y);
+    for (let col = 0; col < newWidth; col += 1) {
+        for (let row = 0; row < newHeight; row += 1) {
+            mapData(col, row);
         }
     }
 }

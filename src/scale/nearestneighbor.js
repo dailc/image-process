@@ -29,9 +29,9 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     };
     
     // 区块
-    for (let x = 0; x < newWidth; x += 1) {
-        for (let y = 0; y < newHeight; y += 1) {
-            mapData(x, y);
+    for (let col = 0; col < newWidth; col += 1) {
+        for (let row = 0; row < newHeight; row += 1) {
+            mapData(col, row);
         }
     }
 }

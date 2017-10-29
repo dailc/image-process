@@ -42,9 +42,9 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     };
 
     // 区块
-    for (var x = 0; x < newWidth; x += 1) {
-        for (var y = 0; y < newHeight; y += 1) {
-            mapData(x, y);
+    for (var col = 0; col < newWidth; col += 1) {
+        for (var row = 0; row < newHeight; row += 1) {
+            mapData(col, row);
         }
     }
 }
@@ -124,20 +124,21 @@ function scale$1(data, width, height, newData, newWidth, newHeight) {
 
         for (var j = 0; j <= 3; j += 1) {
             // 两套公式
-            // const partV = v * ((u1 * data[index01 + j]) + (u * data[index11 + j]));
-            // const partV1 = v1 * ((u1 * data[index00 + j]) + (u * data[index10 + j]));
-            // dstData[dstI + j] = partV + partV1;
-            var partU = u * (v1 * data[index10 + j] + v * data[index11 + j]);
-            var partU1 = u1 * (v1 * data[index00 + j] + v * data[index01 + j]);
+            var partV = v * (u1 * data[index01 + j] + u * data[index11 + j]);
+            var partV1 = v1 * (u1 * data[index00 + j] + u * data[index10 + j]);
 
-            dstData[dstI + j] = partU + partU1;
+            dstData[dstI + j] = partV + partV1;
+            // const partU = u * ((v1 * data[index10 + j]) + (v * data[index11 + j]));
+            // const partU1 = u1 * ((v1 * data[index00 + j]) + (v * data[index01 + j]));
+
+            // dstData[dstI + j] = partU + partU1;
         }
     };
 
     // 区块
-    for (var x = 0; x < newWidth; x += 1) {
-        for (var y = 0; y < newHeight; y += 1) {
-            mapData(x, y);
+    for (var col = 0; col < newWidth; col += 1) {
+        for (var row = 0; row < newHeight; row += 1) {
+            mapData(col, row);
         }
     }
 }
@@ -278,9 +279,9 @@ function scale$2(data, width, height, newData, newWidth, newHeight) {
     };
 
     // 区块
-    for (var x = 0; x < newWidth; x += 1) {
-        for (var y = 0; y < newHeight; y += 1) {
-            mapData(x, y);
+    for (var col = 0; col < newWidth; col += 1) {
+        for (var row = 0; row < newHeight; row += 1) {
+            mapData(col, row);
         }
     }
 }

@@ -1,8 +1,34 @@
 /**
  * 缩放算法
- * 双立方插值，图像更真实
+ * 双立方（三次）卷积插值，图像更真实
  * 计算周围16个点
- */
+ * 取一阶导数值为二阶差分值的情况，满足插值函数一阶导函数连续
+ * 函数逼近程度和三次样条插值效果一样，非常的高（数学理论上现已经是最优）
+ * 
+ * 公式：（矩阵乘法）
+ * 浮点坐标(i+u,j+v)周围的16个邻点，目的像素值f(i+u,j+v)，如下插值公式
+ * （利用三次多项式S(x)求逼近理论上最佳插值函数sin(x)/x）
+ * 
+ * f(i+u,j+v) = [A] * [B] * [C]
+ * 
+ * [A]=[ S(u + 1)　S(u + 0)　S(u - 1)　S(u - 2) ]
+ * 
+ *     ┏ f(i-1, j-1)　f(i-1, j+0)　f(i-1, j+1)　f(i-1, j+2) ┓
+   [B]=┃ f(i+0, j-1)　f(i+0, j+0)　f(i+0, j+1)　f(i+0, j+2) ┃
+            　  ┃ f(i+1, j-1)　f(i+1, j+0)　f(i+1, j+1)　f(i+1, j+2) ┃
+            　  ┗ f(i+2, j-1)　f(i+2, j+0)　f(i+2, j+1)　f(i+2, j+2) ┛
+ * 
+ *     ┏ S(v + 1) ┓
+   [C]=┃ S(v + 0) ┃
+                  ┃ S(v - 1) ┃
+                  ┗ S(v - 2) ┛
+ *
+                    ┏ 1-2*Abs(x)^2+Abs(x)^3　　　　　 , 0<=Abs(x)<1
+   S(x)=｛ 4-8*Abs(x)+5*Abs(x)^2-Abs(x)^3　, 1<=Abs(x)<2
+                    ┗ 0　　　　　　　　　　　　　　　 , Abs(x)>=2    
+ * 
+ * S(x)是对 Sin(x*Pi)/x 的逼近（Pi是圆周率——π）
+ * */
 let a00;
 let a01;
 let a02;
@@ -265,9 +291,9 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     };
 
     // 区块
-    for (let x = 0; x < newWidth; x += 1) {
-        for (let y = 0; y < newHeight; y += 1) {
-            mapData(x, y);
+    for (let col = 0; col < newWidth; col += 1) {
+        for (let row = 0; row < newHeight; row += 1) {
+            mapData(col, row);
         }
     }
 }

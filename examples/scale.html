@@ -36,6 +36,7 @@
         <div>
             <input type="file" id="imgFile">
             <div class="btn-block">
+                <button id="btn_changemime">切换MIME</button>
                 <button id="btn_canvas">canvas自带</button>
             	<button id="btn_nearst">最邻近插值</button>
             	<button id="btn_bilinear">双线性差值</button>
@@ -54,6 +55,7 @@
             var ctxHandle;
             var sourceImage;
             var sourceBase64;
+            var mime = 'image/png';
 
             initPage();
 
@@ -81,6 +83,13 @@
                 });
                 document.getElementById('btn_bicubic').addEventListener('click', function(e) {
                     processImg(sourceImage, 2);
+                });
+                document.getElementById('btn_changemime').addEventListener('click', function(e) {
+                    if (mime === 'image/png') {
+                        mime = 'image/jpeg';
+                    } else {
+                        mime = 'image/png';
+                    }
                 });
             }
 
@@ -135,7 +144,7 @@
                     newBase64 = sourceBase64
                 } else {
                     newBase64 = ImageProcess.scaleImage(img, {
-                        mime: 'image/png',
+                        mime: mime,
                         width: canvasHandle.width,
                         height: canvasHandle.height,
                         processType: processType || 0,
@@ -148,7 +157,10 @@
                 newImg.src = newBase64;
 
                 newImg.onload = function() {
-                    ctxHandle.drawImage(newImg, 0, 0, canvasHandle.width, canvasHandle.height);
+                    ctxHandle.drawImage(newImg,
+                        0, 0,
+                        canvasHandle.width, canvasHandle.height,
+                    );
 
                     console.log('压缩前w:' + img.width + ',h:' + img.height);
                     console.log('压缩后w:' + newImg.width + ',h:' + newImg.height);

@@ -38,7 +38,9 @@ export default function scaleMixin(ImageProcess) {
         canvasTransfer.width = width;
         canvasTransfer.height = height;
         
-        ctxTransfer.drawImage(image, 0, 0, width, height);
+        ctxTransfer.drawImage(image,
+            0, 0, width, height,
+        );
         
         const imageData = ctxTransfer.getImageData(0, 0, width, height);
         let newImageData = ctxTransfer.createImageData(finalArgs.width, finalArgs.height);
