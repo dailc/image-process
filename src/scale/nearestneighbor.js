@@ -9,7 +9,7 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     const scaleH = newHeight / height;
     const dstData = newData;
     
-    const mapData = (dstCol, dstRow) => {
+    const filter = (dstCol, dstRow) => {
         const srcCol = Math.min(width - 1, dstCol / scaleW);
         const srcRow = Math.min(height - 1, dstRow / scaleH);
         const intCol = Math.floor(srcCol);
@@ -31,7 +31,7 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     // 区块
     for (let col = 0; col < newWidth; col += 1) {
         for (let row = 0; row < newHeight; row += 1) {
-            mapData(col, row);
+            filter(col, row);
         }
     }
 }

@@ -22,7 +22,7 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     var scaleH = newHeight / height;
     var dstData = newData;
 
-    var mapData = function mapData(dstCol, dstRow) {
+    var filter = function filter(dstCol, dstRow) {
         var srcCol = Math.min(width - 1, dstCol / scaleW);
         var srcRow = Math.min(height - 1, dstRow / scaleH);
         var intCol = Math.floor(srcCol);
@@ -44,7 +44,7 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     // 区块
     for (var col = 0; col < newWidth; col += 1) {
         for (var row = 0; row < newHeight; row += 1) {
-            mapData(col, row);
+            filter(col, row);
         }
     }
 }
@@ -58,17 +58,38 @@ function nearestNeighborInterpolation(imgData, newImgData) {
 /**
  * 缩放算法
  * 双线性差值，会损坏原图（带低通滤波器效果）
- * 公式：
- * Z =
- * 先y
- * (1-v) * [(1-u) * f(x0,y0) + u * f(x1,y0)] +
- * v * [(1-u) * f(x0,y1) + u * f(x1,y1)] +
- * 先x
- * (1-u) * [(1-v) * f(x0,y0) + v * f(x0,y1)] +
- * u * [(1-v) * f(x1,y0) + v * f(x1,y1)]
- * 其中u,v为目标坐标（浮动坐标）的小数部分，取值范围[0,1)
- * f(x,y)分别为最近的四个边界点
  */
+
+/**
+ * 获取某行某列的像素对于的rgba值
+ * @param {Object} data 图像数据
+ * @param {Number} srcWidth 宽度
+ * @param {Number} srcHeight 高度
+ * @param {Number} row 目标像素的行
+ * @param {Number} col 目标像素的列
+ */
+function getRGBAValue(data, srcWidth, srcHeight, row, col) {
+    var newRow = row;
+    var newCol = col;
+
+    if (newRow >= srcHeight) {
+        newRow = srcHeight - 1;
+    } else if (newRow < 0) {
+        newRow = 0;
+    }
+
+    if (newCol >= srcWidth) {
+        newCol = srcWidth - 1;
+    } else if (newCol < 0) {
+        newCol = 0;
+    }
+
+    var newIndex = newRow * srcWidth + newCol;
+
+    newIndex *= 4;
+
+    return [data[newIndex + 0], data[newIndex + 1], data[newIndex + 2], data[newIndex + 3]];
+}
 
 function scale$1(data, width, height, newData, newWidth, newHeight) {
     // 计算压缩后的缩放比
@@ -76,7 +97,7 @@ function scale$1(data, width, height, newData, newWidth, newHeight) {
     var scaleH = newHeight / height;
     var dstData = newData;
 
-    var mapData = function mapData(dstCol, dstRow) {
+    var filter = function filter(dstCol, dstRow) {
         // 源图像中的坐标（可能是一个浮点）
         var srcCol = Math.min(width - 1, dstCol / scaleW);
         var srcRow = Math.min(height - 1, dstRow / scaleH);
@@ -91,51 +112,26 @@ function scale$1(data, width, height, newData, newWidth, newHeight) {
 
         // 真实的index，因为数组是一维的
         var dstI = dstRow * newWidth + dstCol;
-        // 获取左上角位置,代表xy
-        var index00 = intRow * width + intCol;
-        var index01 = void 0;
-        var index10 = void 0;
-        var index11 = void 0;
-
-        // 获取其三个位置，需要判断是否溢出
-        if (intCol < width - 1) {
-            index10 = index00 + 1;
-        } else {
-            index10 = index00;
-        }
-        // 顺便11也可以取，因为11根据10来定的
-        if (intRow < height - 1) {
-            index01 = index00 + width;
-            index11 = index10 + width;
-        } else {
-            index01 = index00;
-            index11 = index10;
-        }
 
         // rgba，所以要乘以4
         dstI *= 4;
-        index00 *= 4;
-        index01 *= 4;
-        index10 *= 4;
-        index11 *= 4;
+
+        var rgba00 = getRGBAValue(data, width, height, intRow + 0, intCol + 0);
+        var rgba01 = getRGBAValue(data, width, height, intRow + 0, intCol + 1);
+        var rgba10 = getRGBAValue(data, width, height, intRow + 1, intCol + 0);
+        var rgba11 = getRGBAValue(data, width, height, intRow + 1, intCol + 1);
 
         for (var j = 0; j <= 3; j += 1) {
-            // 两套公式
-            var partV = v * (u1 * data[index01 + j] + u * data[index11 + j]);
-            var partV1 = v1 * (u1 * data[index00 + j] + u * data[index10 + j]);
+            var partV = v * (u1 * rgba10[j] + u * rgba11[j]);
+            var partV1 = v1 * (u1 * rgba00[j] + u * rgba01[j]);
 
             dstData[dstI + j] = partV + partV1;
-            // const partU = u * ((v1 * data[index10 + j]) + (v * data[index11 + j]));
-            // const partU1 = u1 * ((v1 * data[index00 + j]) + (v * data[index01 + j]));
-
-            // dstData[dstI + j] = partU + partU1;
         }
     };
 
-    // 区块
     for (var col = 0; col < newWidth; col += 1) {
         for (var row = 0; row < newHeight; row += 1) {
-            mapData(col, row);
+            filter(col, row);
         }
     }
 }
@@ -175,8 +171,7 @@ var a31 = void 0;
 var a32 = void 0;
 var a33 = void 0;
 
-// 返回一个一维数组，有四个值rgba
-var getRGBAValue = function getRGBAValue(data, srcWidth, srcHeight, row, col, colorIndex) {
+var getRGBAValue$1 = function getRGBAValue(data, srcWidth, srcHeight, row, col, colorIndex) {
     var newRow = row;
     var newCol = col;
 
@@ -270,7 +265,7 @@ function scale$2(data, width, height, newData, newWidth, newHeight) {
             // 16个临近点
             for (var m = -1; m <= 2; m += 1) {
                 for (var n = -1; n <= 2; n += 1) {
-                    tmpPixels[m + 1][n + 1] = getRGBAValue(data, width, height, intRow + m, intCol + n, i);
+                    tmpPixels[m + 1][n + 1] = getRGBAValue$1(data, width, height, intRow + m, intCol + n, i);
                 }
             }
 
@@ -348,7 +343,7 @@ function getPixelValue$1(pixelValue) {
  * @param {Number} row 目标像素的行
  * @param {Number} col 目标像素的列
  */
-function getRGBAValue$1(data, srcWidth, srcHeight, row, col) {
+function getRGBAValue$2(data, srcWidth, srcHeight, row, col) {
     var newRow = row;
     var newCol = col;
 
@@ -400,7 +395,7 @@ function scale$3(data, width, height, newData, newWidth, newHeight) {
         // 16个邻近点
         for (var m = -1; m <= 2; m += 1) {
             for (var n = -1; n <= 2; n += 1) {
-                var rgba = getRGBAValue$1(data, width, height, intRow + m, intCol + n);
+                var rgba = getRGBAValue$2(data, width, height, intRow + m, intCol + n);
                 // 一定要正确区分 m,n和u,v对应的关系，否则会造成图像严重偏差（譬如出现噪点等）
                 // F(row + m, col + n)S(m - v)S(n - u)
                 var f1 = interpolationCalculate(m - v);

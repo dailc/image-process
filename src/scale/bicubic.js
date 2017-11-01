@@ -27,7 +27,6 @@ let a31;
 let a32;
 let a33;
 
-// 返回一个一维数组，有四个值rgba
 const getRGBAValue = (data, srcWidth, srcHeight, row, col, colorIndex) => {
     let newRow = row;
     let newCol = col;
