@@ -60,15 +60,12 @@ function nearestNeighborInterpolation(imgData, newImgData) {
  * 双线性差值，会损坏原图（带低通滤波器效果）
  * 公式：
  * Z =
- * 
  * 先y
  * (1-v) * [(1-u) * f(x0,y0) + u * f(x1,y0)] +
- * v * [(1-u) * f(x0,y1) + u * f(x1,y1)] + 
- * 
+ * v * [(1-u) * f(x0,y1) + u * f(x1,y1)] +
  * 先x
  * (1-u) * [(1-v) * f(x0,y0) + v * f(x0,y1)] +
  * u * [(1-v) * f(x1,y0) + v * f(x1,y1)]
- * 
  * 其中u,v为目标坐标（浮动坐标）的小数部分，取值范围[0,1)
  * f(x,y)分别为最近的四个边界点
  */
@@ -151,9 +148,16 @@ function bilinearInterpolation(imgData, newImgData) {
 
 /**
  * 缩放算法
- * 双立方插值，图像更真实
+ * 双立方（三次）卷积插值，图像更真实
  * 计算周围16个点
- */
+ * 取一阶导数值为二阶差分值的情况，满足插值函数一阶导函数连续
+ * 函数逼近程度和三次样条插值效果一样，非常的高
+ *
+ * 公式：（矩阵乘法）
+ * 推导公式
+ * http://blog.csdn.net/qq_24451605/article/details/49474113
+ * https://en.wikipedia.org/wiki/Bicubic_interpolation
+ * */
 var a00 = void 0;
 var a01 = void 0;
 var a02 = void 0;
@@ -244,7 +248,7 @@ function scale$2(data, width, height, newData, newWidth, newHeight) {
     var scaleW = newWidth / width;
     var scaleH = newHeight / height;
 
-    var mapData = function mapData(dstCol, dstRow) {
+    var filter = function filter(dstCol, dstRow) {
         // 源图像中的坐标（可能是一个浮点）
         var srcCol = Math.min(width - 1, dstCol / scaleW);
         var srcRow = Math.min(height - 1, dstRow / scaleH);
@@ -261,14 +265,13 @@ function scale$2(data, width, height, newData, newWidth, newHeight) {
 
         // 16个邻近像素的灰度（分别计算成rgba）
         var tmpPixels = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
-
+        // rgba
         for (var i = 0; i <= 3; i += 1) {
-            // 16个临近点,for循环速度要慢点，优化一部分
-            for (var row = 0; row <= 3; row += 1) {
-                tmpPixels[row][0] = getRGBAValue(data, width, height, intRow - 1 + row, intCol - 1, i);
-                tmpPixels[row][1] = getRGBAValue(data, width, height, intRow - 1 + row, intCol, i);
-                tmpPixels[row][2] = getRGBAValue(data, width, height, intRow - 1 + row, intCol + 1, i);
-                tmpPixels[row][3] = getRGBAValue(data, width, height, intRow - 1 + row, intCol + 2, i);
+            // 16个临近点
+            for (var m = -1; m <= 2; m += 1) {
+                for (var n = -1; n <= 2; n += 1) {
+                    tmpPixels[m + 1][n + 1] = getRGBAValue(data, width, height, intRow + m, intCol + n, i);
+                }
             }
 
             // 更新系数
@@ -281,13 +284,152 @@ function scale$2(data, width, height, newData, newWidth, newHeight) {
     // 区块
     for (var col = 0; col < newWidth; col += 1) {
         for (var row = 0; row < newHeight; row += 1) {
-            mapData(col, row);
+            filter(col, row);
         }
     }
 }
 
 function bicubicInterpolation(imgData, newImgData) {
     scale$2(imgData.data, imgData.width, imgData.height, newImgData.data, newImgData.width, newImgData.height);
+
+    return newImgData;
+}
+
+/**
+ * 缩放算法
+ * 双立方（三次）卷积插值，图像更真实
+ * 计算周围16个点
+ * 取一阶导数值为二阶差分值的情况，满足插值函数一阶导函数连续
+ * 函数逼近程度和三次样条插值效果一样，非常的高
+ *
+ * 公式：（矩阵乘法）
+ * 推导公式
+ * http://blog.csdn.net/qq_24451605/article/details/49474113
+ * https://en.wikipedia.org/wiki/Bicubic_interpolation
+ * */
+
+/**
+ * 采样公式的常数A取值,调整锐化与模糊
+ * -0.5 三次Hermite样条
+ * -0.75 常用值之一
+ * -1 逼近y = sin(x*PI)/(x*PI)
+ * -2 常用值之一
+ */
+var A = -1;
+
+function interpolationCalculate(x) {
+    var absX = x >= 0 ? x : -x;
+    var x2 = x * x;
+    var x3 = absX * x2;
+
+    if (absX <= 1) {
+        return 1 - (A + 3) * x2 + (A + 2) * x3;
+    } else if (absX <= 2) {
+        return -4 * A + 8 * A * absX - 5 * A * x2 + A * x3;
+    }
+
+    return 0;
+}
+
+function getPixelValue$1(pixelValue) {
+    var newPixelValue = pixelValue;
+
+    newPixelValue = Math.min(255, newPixelValue);
+    newPixelValue = Math.max(0, newPixelValue);
+
+    return newPixelValue;
+}
+
+/**
+ * 获取某行某列的像素对于的rgba值
+ * @param {Object} data 图像数据
+ * @param {Number} srcWidth 宽度
+ * @param {Number} srcHeight 高度
+ * @param {Number} row 目标像素的行
+ * @param {Number} col 目标像素的列
+ */
+function getRGBAValue$1(data, srcWidth, srcHeight, row, col) {
+    var newRow = row;
+    var newCol = col;
+
+    if (newRow >= srcHeight) {
+        newRow = srcHeight - 1;
+    } else if (newRow < 0) {
+        newRow = 0;
+    }
+
+    if (newCol >= srcWidth) {
+        newCol = srcWidth - 1;
+    } else if (newCol < 0) {
+        newCol = 0;
+    }
+
+    var newIndex = newRow * srcWidth + newCol;
+
+    newIndex *= 4;
+
+    return [data[newIndex + 0], data[newIndex + 1], data[newIndex + 2], data[newIndex + 3]];
+}
+
+function scale$3(data, width, height, newData, newWidth, newHeight) {
+    var dstData = newData;
+
+    // 计算压缩后的缩放比
+    var scaleW = newWidth / width;
+    var scaleH = newHeight / height;
+
+    var filter = function filter(dstCol, dstRow) {
+        // 源图像中的坐标（可能是一个浮点）
+        var srcCol = Math.min(width - 1, dstCol / scaleW);
+        var srcRow = Math.min(height - 1, dstRow / scaleH);
+        var intCol = Math.floor(srcCol);
+        var intRow = Math.floor(srcRow);
+        // 计算u和v
+        var u = srcCol - intCol;
+        var v = srcRow - intRow;
+
+        // 真实的index，因为数组是一维的
+        var dstI = dstRow * newWidth + dstCol;
+
+        dstI *= 4;
+
+        // 存储灰度值的权重卷积和
+        var rgbaData = [0, 0, 0, 0];
+        // 根据数学推导，16个点的f1*f2加起来是趋近于1的（可能会有浮点误差）
+        // 因此就不再单独先加权值，再除了
+        // 16个邻近点
+        for (var m = -1; m <= 2; m += 1) {
+            for (var n = -1; n <= 2; n += 1) {
+                var rgba = getRGBAValue$1(data, width, height, intRow + m, intCol + n);
+                // 一定要正确区分 m,n和u,v对应的关系，否则会造成图像严重偏差（譬如出现噪点等）
+                // F(row + m, col + n)S(m - v)S(n - u)
+                var f1 = interpolationCalculate(m - v);
+                var f2 = interpolationCalculate(n - u);
+                var weight = f1 * f2;
+
+                rgbaData[0] += rgba[0] * weight;
+                rgbaData[1] += rgba[1] * weight;
+                rgbaData[2] += rgba[2] * weight;
+                rgbaData[3] += rgba[3] * weight;
+            }
+        }
+
+        dstData[dstI + 0] = getPixelValue$1(rgbaData[0]);
+        dstData[dstI + 1] = getPixelValue$1(rgbaData[1]);
+        dstData[dstI + 2] = getPixelValue$1(rgbaData[2]);
+        dstData[dstI + 3] = getPixelValue$1(rgbaData[3]);
+    };
+
+    // 区块
+    for (var col = 0; col < newWidth; col += 1) {
+        for (var row = 0; row < newHeight; row += 1) {
+            filter(col, row);
+        }
+    }
+}
+
+function bicubicInterpolation$1(imgData, newImgData) {
+    scale$3(imgData.data, imgData.width, imgData.height, newImgData.data, newImgData.width, newImgData.height);
 
     return newImgData;
 }
@@ -353,7 +495,7 @@ function scaleMixin(ImageProcess) {
         var width = image.width;
         var height = image.height;
         var finalArgs = extend({}, defaultArgs, args);
-        var processTypes = [nearestNeighborInterpolation, bilinearInterpolation, bicubicInterpolation];
+        var processTypes = [nearestNeighborInterpolation, bilinearInterpolation, bicubicInterpolation, bicubicInterpolation$1];
 
         var canvasTransfer = document.createElement('canvas');
         var ctxTransfer = canvasTransfer.getContext('2d');
@@ -373,8 +515,8 @@ function scaleMixin(ImageProcess) {
 
         ctxTransfer.putImageData(newImageData, 0, 0, 0, 0, canvasTransfer.width, canvasTransfer.height);
 
-        // console.log(imageData);
-        // console.log(newImageData);
+        console.log(imageData);
+        console.log(newImageData);
         // console.log('压缩时w:' + canvasTransfer.width + ',' + canvasTransfer.height);
 
         return canvasTransfer.toDataURL(finalArgs.mime, 0.9);

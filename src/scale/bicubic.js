@@ -3,31 +3,12 @@
  * 双立方（三次）卷积插值，图像更真实
  * 计算周围16个点
  * 取一阶导数值为二阶差分值的情况，满足插值函数一阶导函数连续
- * 函数逼近程度和三次样条插值效果一样，非常的高（数学理论上现已经是最优）
- * 
- * 公式：（矩阵乘法）
- * 浮点坐标(i+u,j+v)周围的16个邻点，目的像素值f(i+u,j+v)，如下插值公式
- * （利用三次多项式S(x)求逼近理论上最佳插值函数sin(x)/x）
- * 
- * f(i+u,j+v) = [A] * [B] * [C]
- * 
- * [A]=[ S(u + 1)　S(u + 0)　S(u - 1)　S(u - 2) ]
- * 
- *     ┏ f(i-1, j-1)　f(i-1, j+0)　f(i-1, j+1)　f(i-1, j+2) ┓
-   [B]=┃ f(i+0, j-1)　f(i+0, j+0)　f(i+0, j+1)　f(i+0, j+2) ┃
-            　  ┃ f(i+1, j-1)　f(i+1, j+0)　f(i+1, j+1)　f(i+1, j+2) ┃
-            　  ┗ f(i+2, j-1)　f(i+2, j+0)　f(i+2, j+1)　f(i+2, j+2) ┛
- * 
- *     ┏ S(v + 1) ┓
-   [C]=┃ S(v + 0) ┃
-                  ┃ S(v - 1) ┃
-                  ┗ S(v - 2) ┛
+ * 函数逼近程度和三次样条插值效果一样，非常的高
  *
-                    ┏ 1-2*Abs(x)^2+Abs(x)^3　　　　　 , 0<=Abs(x)<1
-   S(x)=｛ 4-8*Abs(x)+5*Abs(x)^2-Abs(x)^3　, 1<=Abs(x)<2
-                    ┗ 0　　　　　　　　　　　　　　　 , Abs(x)>=2    
- * 
- * S(x)是对 Sin(x*Pi)/x 的逼近（Pi是圆周率——π）
+ * 公式：（矩阵乘法）
+ * 推导公式
+ * http://blog.csdn.net/qq_24451605/article/details/49474113
+ * https://en.wikipedia.org/wiki/Bicubic_interpolation
  * */
 let a00;
 let a01;
@@ -227,7 +208,7 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     const scaleW = newWidth / width;
     const scaleH = newHeight / height;
 
-    const mapData = (dstCol, dstRow) => {
+    const filter = (dstCol, dstRow) => {
         // 源图像中的坐标（可能是一个浮点）
         const srcCol = Math.min(width - 1, dstCol / scaleW);
         const srcRow = Math.min(height - 1, dstRow / scaleH);
@@ -249,40 +230,22 @@ function scale(data, width, height, newData, newWidth, newHeight) {
             [0, 0, 0, 0],
             [0, 0, 0, 0],
         ];
-
+        // rgba
         for (let i = 0; i <= 3; i += 1) {
-            // 16个临近点,for循环速度要慢点，优化一部分
-            for (let row = 0; row <= 3; row += 1) {
-                tmpPixels[row][0] = getRGBAValue(data,
-                    width,
-                    height,
-                    intRow - 1 + row,
-                    intCol - 1,
-                    i,
-                );
-                tmpPixels[row][1] = getRGBAValue(data,
-                    width,
-                    height,
-                    intRow - 1 + row,
-                    intCol,
-                    i,
-                );
-                tmpPixels[row][2] = getRGBAValue(data,
-                    width,
-                    height,
-                    intRow - 1 + row,
-                    intCol + 1,
-                    i,
-                );
-                tmpPixels[row][3] = getRGBAValue(data,
-                    width,
-                    height,
-                    intRow - 1 + row,
-                    intCol + 2,
-                    i,
-                );
+            // 16个临近点
+            for (let m = -1; m <= 2; m += 1) {
+                for (let n = -1; n <= 2; n += 1) {
+                    tmpPixels[m + 1][n + 1] = getRGBAValue(
+                        data,
+                        width,
+                        height,
+                        intRow + m,
+                        intCol + n,
+                        i,
+                    );
+                }
             }
-
+            
             // 更新系数
             updateCoefficients(tmpPixels);
             // 利用uv来求值
@@ -293,7 +256,7 @@ function scale(data, width, height, newData, newWidth, newHeight) {
     // 区块
     for (let col = 0; col < newWidth; col += 1) {
         for (let row = 0; row < newHeight; row += 1) {
-            mapData(col, row);
+            filter(col, row);
         }
     }
 }

@@ -1,6 +1,7 @@
 import nearestNeighborInterpolation from '../scale/nearestneighbor';
 import bilinearInterpolation from '../scale/bilinear';
 import bicubicInterpolation from '../scale/bicubic';
+import bicubicInterpolation2 from '../scale/bicubic2';
 import {
     extend,
 } from '../util/lang';
@@ -30,6 +31,7 @@ export default function scaleMixin(ImageProcess) {
         const processTypes = [nearestNeighborInterpolation,
             bilinearInterpolation,
             bicubicInterpolation,
+            bicubicInterpolation2,
         ];
         
         const canvasTransfer = document.createElement('canvas');
@@ -55,8 +57,8 @@ export default function scaleMixin(ImageProcess) {
             0, 0, 0, 0,
             canvasTransfer.width, canvasTransfer.height);
         
-        // console.log(imageData);
-        // console.log(newImageData);
+        console.log(imageData);
+        console.log(newImageData);
         // console.log('压缩时w:' + canvasTransfer.width + ',' + canvasTransfer.height);
         
         return canvasTransfer.toDataURL(finalArgs.mime, 0.9);

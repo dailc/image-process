@@ -41,6 +41,7 @@
             	<button id="btn_nearst">最邻近插值</button>
             	<button id="btn_bilinear">双线性差值</button>
             	<button id="btn_bicubic">三次卷积插值</button>
+            	<button id="btn_bicubic2">三次卷积插值2</button>
             </div>
             <div class="img-container">
                 <img class="source-img" data-preview-src="" data-preview-group="1" />
@@ -83,6 +84,9 @@
                 });
                 document.getElementById('btn_bicubic').addEventListener('click', function(e) {
                     processImg(sourceImage, 2);
+                });
+                document.getElementById('btn_bicubic2').addEventListener('click', function(e) {
+                    processImg(sourceImage, 3);
                 });
                 document.getElementById('btn_changemime').addEventListener('click', function(e) {
                     if (mime === 'image/png') {
