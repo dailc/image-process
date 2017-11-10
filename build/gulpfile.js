@@ -53,6 +53,25 @@ gulp.task('build_main', () => walkByRollup([{
     sourcemap: isSourceMap,
 }]));
 
+gulp.task('build_clip', () => walkByRollup([{
+    input: resolvePath(`${SOURCE_ROOT_PATH}/clip/index.js`),
+    plugins: [
+        eslint({
+            exclude: 'node_modules/**',
+        }),
+        babel({
+            exclude: 'node_modules/**',
+        }),
+    ],
+    output: {
+        file: resolvePath(`${RELEASE_ROOT_PATH}/image-clip.js`),
+    },
+    format: 'umd',
+    name: 'ImageClip',
+    banner,
+    sourcemap: isSourceMap,
+}]));
+
 // eslint代码检查打包文件以外的文件
 gulp.task('eslint_others', () => gulp.src([
     resolvePath('build/**/*.js'),
@@ -71,8 +90,13 @@ gulp.task('concat_css', () => gulp.src([
     .pipe(gulpConcat('image-process.css'))
     .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
 
+gulp.task('concat_css_clip', () => gulp.src([
+    resolvePath(`${SOURCE_ROOT_PATH}/clip/css/*.css`),
+])
+    .pipe(gulpConcat('image-clip.css'))
+    .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
 
-gulp.task('build', ['build_main', 'concat_css', 'eslint_others']);
+gulp.task('build', ['build_main', 'build_clip', 'concat_css', 'concat_css_clip', 'eslint_others']);
 
 gulp.task('dist_js_uglify', () => gulp.src([
     resolvePath(`${RELEASE_ROOT_PATH}/**/*.js`),

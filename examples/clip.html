@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
         <title>图像处理</title>
         <link rel="stylesheet" href="./_common/common.css" />
-        <link rel="stylesheet" href="../dist/image-process.css" />
+        <link rel="stylesheet" href="../dist/image-clip.css" />
         <link rel="stylesheet" href="mui/mui.css" />
         <style>
             body {
@@ -15,7 +15,14 @@
             
             .img-clip {
                 margin-top: 100px;
-                margin-bottom: 60px;
+            }
+            
+            .clip-content {
+                position: absolute;
+                width: 100%;
+                top: 0;
+                left: 0;
+                bottom: 50px;
             }
             
             .show-content {
@@ -31,9 +38,10 @@
             }
             
             .show-img {
+                margin: auto;
                 margin-bottom: 60px;
                 padding: 0;
-                width: 100%;
+                width: 95%;
                 height: auto;
             }
             
@@ -88,29 +96,29 @@
 
         <div class="show-content hidden">
             <div class="img-wrap">
-            	   <img class="show-img" data-preview-src="" data-preview-group="2"></img>
+                <img class="show-img" data-preview-src="" data-preview-group="2"></img>
             </div>
-            
-            <nav class="mui-bar mui-bar-tab">
-                <a class="mui-tab-item mui-active" id="btn-back">
-                    <span class="mui-icon mui-icon-arrowleft"></span>
-                    <span class="mui-tab-label hidden">取消</span>
+
+            <nav class="nav-bar nav-bar-tab">
+                <a class="tab-item" id="btn-back">
+                    <span class="mui-icon mui-icon-arrowleft tab-icon"></span>
+                    <span class="tab-label hidden">取消</span>
                 </a>
-                <a class="mui-tab-item" id="btn-detail">
-                    <span class="mui-icon mui-icon-more-filled"></span>
-                    <span class="mui-tab-label hidden">详情</span>
+                <a class="tab-item" id="btn-detail">
+                    <span class="mui-icon mui-icon-more-filled tab-icon"></span>
+                    <span class="tab-label hidden">详情</span>
                 </a>
-                <a class="mui-tab-item " id="btn-save">
-                    <span class="mui-icon mui-icon-checkmarkempty"></span>
-                    <span class="mui-tab-label hidden">确定</span>
+                <a class="tab-item" id="btn-save">
+                    <span class="mui-icon mui-icon-checkmarkempty tab-icon"></span>
+                    <span class="tab-label hidden">确定</span>
                 </a>
             </nav>
         </div>
         <script type="text/javascript" src="./_common/fileinput.js"></script>
-        <script type="text/javascript" src="./../dist/image-process.js"></script>
-        <script type="text/javascript" src="./ejs/ejs.js" ></script>
-        <script type="text/javascript" src="./ejs/ejs.h5.js" ></script>
-        <script type="text/javascript" src="mui/mui.js" ></script>
+        <script type="text/javascript" src="./_common/exif.js"></script>
+        <script type="text/javascript" src="./../dist/image-clip.js"></script>
+        <script type="text/javascript" src="./ejs/ejs.js"></script>
+        <script type="text/javascript" src="./ejs/ejs.h5.js"></script>
         <script>
             var chooseGallery;
             var chooseCamera;
@@ -129,6 +137,10 @@
                 initParams();
                 initListeners();
                 initImgClip();
+                // 临时兼容ejs 2.x，用h5
+                var ejsV6 = /EpointEJS\/6/.test(navigator.userAgent);
+                
+                ejsV6 && (ejs.os.ejs = false);
             }
 
             function initParams() {
@@ -150,7 +162,7 @@
                     success: function(b64, file, detail) {
                         // console.log("选择:" + b64);
                         console.log("fileName:" + file.name);
-                        
+
                         loadImg(b64);
                     },
                     error: function(error) {
@@ -179,13 +191,31 @@
                 img.src = b64;
 
                 img.onload = function() {
-                    cropImage = new ImageProcess.ImgClip({
-                        container: '.img-clip',
-                        img,
+                    EXIF.getData(img, function() {
+                        var orientation = EXIF.getTag(this, 'Orientation');
+                        
+                        cropImage = new ImageClip({
+                            container: '.img-clip',
+                            img,
+                            sizeTipsStyle: 0,
+                            compressScaleRatio: 1,
+                            // 减去顶部间距，底部bar,以及显示间距
+                            maxCssHeight: window.innerHeight - 100 - 50 - 20,
+                        });
+                        
+                        // 6代表图片需要顺时针修复（默认逆时针处理了，所以需要顺过来修复）
+                        switch (orientation) {
+                            case 6:
+                                cropImage.rotate(true);
+                                break;
+                            default:
+                                break;
+                        }
+
                     });
                 };
             }
-            
+
             function changeImgClipShow(isClip) {
                 if (isClip) {
                     chooseGallery.classList.add('hidden');
@@ -218,33 +248,33 @@
                 document.querySelector('#btn-detail').addEventListener('click', function() {
                     showImgDataLen(imgData);
                 });
-                
+
                 document.querySelector('#btn-maxrect').addEventListener('click', function() {
-                    if(!cropImage) {
+                    if (!cropImage) {
                         tips('请选择图片');
                         return;
                     }
                     cropImage.clipRectReset();
                 });
-                
+
                 document.querySelector('#btn-rotate-anticlockwise').addEventListener('click', function() {
-                    if(!cropImage) {
+                    if (!cropImage) {
                         tips('请选择图片');
                         return;
                     }
                     cropImage.rotate(false);
                 });
-                
+
                 document.querySelector('#btn-rotate-clockwise').addEventListener('click', function() {
-                    if(!cropImage) {
+                    if (!cropImage) {
                         tips('请选择图片');
                         return;
                     }
                     cropImage.rotate(true);
                 });
-                
+
                 document.querySelector('#btn-verify').addEventListener('click', function() {
-                    if(!cropImage) {
+                    if (!cropImage) {
                         tips('请选择图片');
                         return;
                     }
@@ -253,7 +283,7 @@
                         message: "是否裁剪图片并处理？",
                         buttonLabels: ['取消', '确定'],
                         success: function(result) {
-                            if(result.which === 1) {
+                            if (result.which === 1) {
                                 cropImage.clip(false);
                                 imgData = cropImage.getClipImgData();
                                 ejs.ui.showWaiting('处理中...');
@@ -264,7 +294,7 @@
                                     ejs.ui.closeWaiting();
                                     tips(JSON.stringify(error), true);
                                 });
-                                
+
                             }
                         },
                         error: function(err) {}
@@ -272,22 +302,22 @@
 
                 });
             }
-            
+
             function showImgDataLen(imgData) {
                 var len = imgData.length;
                 var sizeStr = len + 'B';
 
-                if(len > 1024 * 1024) {
+                if (len > 1024 * 1024) {
                     sizeStr = (Math.round(len / (1024 * 1024))).toString() + 'MB';
-                } else if(len > 1024) {
+                } else if (len > 1024) {
                     sizeStr = (Math.round(len / 1024)).toString() + 'KB';
                 }
 
-                tips('裁剪后大小：' + sizeStr);
+                tips('处理后大小：' + sizeStr);
             }
 
             function tips(msg, isAlert) {
-                if(isAlert) {
+                if (isAlert) {
                     ejs.ui.alert(msg);
                 } else {
                     ejs.ui.toast(msg);
@@ -295,18 +325,18 @@
             }
 
             function changeContent(isShowContent) {
-                if(isShowContent) {
+                if (isShowContent) {
                     showContent.classList.remove('hidden');
                     clipContent.classList.add('hidden');
-                    
+
                     showImg.src = imgData;
-                    
+
                 } else {
                     showContent.classList.add('hidden');
                     clipContent.classList.remove('hidden');
                 }
             }
-            
+
             function b64ToBlob(urlData) {
                 // 去掉url的头，并转化为byte
                 var bytes = window.atob(urlData.split(',')[1]);
@@ -314,7 +344,7 @@
                 // 处理异常,将ascii码小于0的转换为大于0
                 var ab = new ArrayBuffer(bytes.length);
                 var ia = new Uint8Array(ab);
-                for(var i = 0; i < bytes.length; i++) {
+                for (var i = 0; i < bytes.length; i++) {
                     ia[i] = bytes.charCodeAt(i);
                 }
 
@@ -322,22 +352,21 @@
                     type: 'image/png'
                 });
             }
-            
-            function downloadFile(content){
+
+            function downloadFile(content) {
                 // Convert image to 'octet-stream' (Just a download, really)
                 var imageObj = content.replace("image/jpeg", "image/octet-stream");
                 window.location.href = imageObj;
             }
-            
+
             function recognizeImg(success, error) {
                 // 里面正常有：裁边，摆正，梯形矫正，蜕化等算法操作
                 success();
             }
-            
+
             function upload(success, error) {
                 success();
             }
-            
         </script>
     </body>
 
