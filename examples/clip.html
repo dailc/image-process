@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+        <title>图像处理</title>
+        <link rel="stylesheet" href="./_common/common.css" />
+        <link rel="stylesheet" href="../dist/image-process.css" />
+        <link rel="stylesheet" href="mui/mui.css" />
+        <style>
+            body {
+                background: #000;
+            }
+            
+            .img-clip {
+                margin-top: 100px;
+                margin-bottom: 60px;
+            }
+            
+            .show-content {
+                position: relative;
+                top: 40px;
+                margin: 0 auto;
+                text-align: center;
+                vertical-align: middle;
+            }
+            
+            .img-wrap {
+                margin: 0 auto;
+            }
+            
+            .show-img {
+                margin-bottom: 60px;
+                padding: 0;
+                width: 100%;
+                height: auto;
+            }
+            
+            .choose-gallery {
+                margin-top: -60px;
+            }
+            
+            .choose-camera {
+                margin-top: 0px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="clip-content">
+            <div class="upload-container choose-gallery">
+                <div class="upload-pretty" id="img-file-container">
+                    <input type="file" id="targetImg">本地上传
+                </div>
+            </div>
+            <div class="upload-container choose-camera">
+                <div class="upload-pretty" id="img-file-container">
+                    <input type="file" id="targetImgCamera" capture="camera">手机拍摄
+                </div>
+            </div>
+
+            <div class="img-clip"></div>
+
+            <nav class="clip-action nav-bar nav-bar-tab hidden">
+                <a class="tab-item" id="btn-reload">
+                    <span class="mui-icon mui-icon-arrowleft tab-icon"></span>
+                    <span class="tab-label hidden">取消</span>
+                </a>
+                <a class="tab-item " id="btn-rotate-anticlockwise">
+                    <span class="mui-icon mui-icon-refreshempty tab-icon rotate90"></span>
+                    <span class="tab-label hidden">逆时针旋转</span>
+                </a>
+                <a class="tab-item " id="btn-rotate-clockwise">
+                    <span class="mui-icon mui-icon-refreshempty tab-icon"></span>
+                    <span class="tab-label hidden">顺时针旋转</span>
+                </a>
+                <a class="tab-item hidden" id="btn-maxrect">
+                    <span class="mui-icon mui-icon-navigate tab-icon"></span>
+                    <span class="tab-label hidden">最大选择</span>
+                </a>
+                <a class="tab-item" id="btn-verify">
+                    <span class="mui-icon mui-icon-checkmarkempty tab-icon"></span>
+                    <span class="tab-label hidden">确定</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="show-content hidden">
+            <div class="img-wrap">
+            	   <img class="show-img" data-preview-src="" data-preview-group="2"></img>
+            </div>
+            
+            <nav class="mui-bar mui-bar-tab">
+                <a class="mui-tab-item mui-active" id="btn-back">
+                    <span class="mui-icon mui-icon-arrowleft"></span>
+                    <span class="mui-tab-label hidden">取消</span>
+                </a>
+                <a class="mui-tab-item" id="btn-detail">
+                    <span class="mui-icon mui-icon-more-filled"></span>
+                    <span class="mui-tab-label hidden">详情</span>
+                </a>
+                <a class="mui-tab-item " id="btn-save">
+                    <span class="mui-icon mui-icon-checkmarkempty"></span>
+                    <span class="mui-tab-label hidden">确定</span>
+                </a>
+            </nav>
+        </div>
+        <script type="text/javascript" src="./_common/fileinput.js"></script>
+        <script type="text/javascript" src="./../dist/image-process.js"></script>
+        <script type="text/javascript" src="./ejs/ejs.js" ></script>
+        <script type="text/javascript" src="./ejs/ejs.h5.js" ></script>
+        <script type="text/javascript" src="mui/mui.js" ></script>
+        <script>
+            var chooseGallery;
+            var chooseCamera;
+            var cropImage;
+            var imgData;
+            var clipContent;
+            var clipAction;
+            var showContent;
+            var showImg;
+            var targetImg;
+            var targetImgCamera;
+
+            initPage();
+
+            function initPage() {
+                initParams();
+                initListeners();
+                initImgClip();
+            }
+
+            function initParams() {
+                targetImg = document.querySelector('#targetImg');
+                targetImgCamera = document.querySelector('#targetImgCamera');
+                chooseGallery = document.querySelector('.choose-gallery');
+                chooseCamera = document.querySelector('.choose-camera');
+                clipContent = document.querySelector('.clip-content');
+                clipAction = document.querySelector('.clip-action');
+                showContent = document.querySelector('.show-content');
+                showImg = document.querySelector('.show-img');
+            }
+
+            function initImgClip() {
+                new FileInput({
+                    container: '#targetImg',
+                    isMulti: false,
+                    type: 'Image_Camera',
+                    success: function(b64, file, detail) {
+                        // console.log("选择:" + b64);
+                        console.log("fileName:" + file.name);
+                        
+                        loadImg(b64);
+                    },
+                    error: function(error) {
+                        console.error(error);
+                    }
+                });
+                new FileInput({
+                    container: '#targetImgCamera',
+                    isMulti: false,
+                    type: 'Camera',
+                    success: function(b64, file, detail) {
+                        // console.log("选择:" + b64);
+                        console.log("fileName:" + file.name);
+                        loadImg(b64);
+                    },
+                    error: function(error) {
+                        console.error(error);
+                    }
+                });
+            }
+
+            function loadImg(b64) {
+                changeImgClipShow(true);
+
+                var img = new Image();
+                img.src = b64;
+
+                img.onload = function() {
+                    cropImage = new ImageProcess.ImgClip({
+                        container: '.img-clip',
+                        img,
+                    });
+                };
+            }
+            
+            function changeImgClipShow(isClip) {
+                if (isClip) {
+                    chooseGallery.classList.add('hidden');
+                    chooseCamera.classList.add('hidden');
+                    clipAction.classList.remove('hidden');
+                } else {
+                    chooseGallery.classList.remove('hidden');
+                    chooseCamera.classList.remove('hidden');
+                    clipAction.classList.add('hidden');
+                    // 需要改变input，否则下一次无法change
+                    targetImg.value = '';
+                    targetImgCamera.value = '';
+                }
+            }
+
+            function initListeners() {
+                document.querySelector('#btn-reload').addEventListener('click', function() {
+                    cropImage && cropImage.destroy();
+                    changeImgClipShow(false);
+                });
+                document.querySelector('#btn-back').addEventListener('click', function() {
+                    changeContent(false);
+                });
+                document.querySelector('#btn-save').addEventListener('click', function() {
+                    // downloadFile(imgData);
+                    upload(function() {
+                        tips('上传成功');
+                    });
+                });
+                document.querySelector('#btn-detail').addEventListener('click', function() {
+                    showImgDataLen(imgData);
+                });
+                
+                document.querySelector('#btn-maxrect').addEventListener('click', function() {
+                    if(!cropImage) {
+                        tips('请选择图片');
+                        return;
+                    }
+                    cropImage.clipRectReset();
+                });
+                
+                document.querySelector('#btn-rotate-anticlockwise').addEventListener('click', function() {
+                    if(!cropImage) {
+                        tips('请选择图片');
+                        return;
+                    }
+                    cropImage.rotate(false);
+                });
+                
+                document.querySelector('#btn-rotate-clockwise').addEventListener('click', function() {
+                    if(!cropImage) {
+                        tips('请选择图片');
+                        return;
+                    }
+                    cropImage.rotate(true);
+                });
+                
+                document.querySelector('#btn-verify').addEventListener('click', function() {
+                    if(!cropImage) {
+                        tips('请选择图片');
+                        return;
+                    }
+                    ejs.ui.confirm({
+                        title: "请问",
+                        message: "是否裁剪图片并处理？",
+                        buttonLabels: ['取消', '确定'],
+                        success: function(result) {
+                            if(result.which === 1) {
+                                cropImage.clip(false);
+                                imgData = cropImage.getClipImgData();
+                                ejs.ui.showWaiting('处理中...');
+                                recognizeImg(function() {
+                                    ejs.ui.closeWaiting();
+                                    changeContent(true);
+                                }, function(error) {
+                                    ejs.ui.closeWaiting();
+                                    tips(JSON.stringify(error), true);
+                                });
+                                
+                            }
+                        },
+                        error: function(err) {}
+                    });
+
+                });
+            }
+            
+            function showImgDataLen(imgData) {
+                var len = imgData.length;
+                var sizeStr = len + 'B';
+
+                if(len > 1024 * 1024) {
+                    sizeStr = (Math.round(len / (1024 * 1024))).toString() + 'MB';
+                } else if(len > 1024) {
+                    sizeStr = (Math.round(len / 1024)).toString() + 'KB';
+                }
+
+                tips('裁剪后大小：' + sizeStr);
+            }
+
+            function tips(msg, isAlert) {
+                if(isAlert) {
+                    ejs.ui.alert(msg);
+                } else {
+                    ejs.ui.toast(msg);
+                }
+            }
+
+            function changeContent(isShowContent) {
+                if(isShowContent) {
+                    showContent.classList.remove('hidden');
+                    clipContent.classList.add('hidden');
+                    
+                    showImg.src = imgData;
+                    
+                } else {
+                    showContent.classList.add('hidden');
+                    clipContent.classList.remove('hidden');
+                }
+            }
+            
+            function b64ToBlob(urlData) {
+                // 去掉url的头，并转化为byte
+                var bytes = window.atob(urlData.split(',')[1]);
+
+                // 处理异常,将ascii码小于0的转换为大于0
+                var ab = new ArrayBuffer(bytes.length);
+                var ia = new Uint8Array(ab);
+                for(var i = 0; i < bytes.length; i++) {
+                    ia[i] = bytes.charCodeAt(i);
+                }
+
+                return new Blob([ab], {
+                    type: 'image/png'
+                });
+            }
+            
+            function downloadFile(content){
+                // Convert image to 'octet-stream' (Just a download, really)
+                var imageObj = content.replace("image/jpeg", "image/octet-stream");
+                window.location.href = imageObj;
+            }
+            
+            function recognizeImg(success, error) {
+                // 里面正常有：裁边，摆正，梯形矫正，蜕化等算法操作
+                success();
+            }
+            
+            function upload(success, error) {
+                success();
+            }
+            
+        </script>
+    </body>
+
+</html>

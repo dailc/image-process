@@ -46,7 +46,7 @@ module.exports = {
         // 允许一个变量或多个变量的声明
         //'one-var': 0,
         // 允许++和--
-        //'no-plusplus': 0,        
+        'no-plusplus': 0,        
         // 文件末尾强制换行，目前暂时放弃，考虑到一些Idle的格式化问题
         'eol-last': 0,
         //强制使用一致的缩进，4个空格
@@ -57,6 +57,8 @@ module.exports = {
         'no-underscore-dangle': [2, {
             "allow": ["_handleMessageFromNative"]
         }],
+        // 允许位操作
+        'no-bitwise': 0,
 
         // 以下是一些与airbnb无关的修改配置
         // recommend的修改

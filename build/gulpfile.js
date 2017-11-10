@@ -3,6 +3,8 @@ const path = require('path');
 const gulp = require('gulp');
 const gulpSequence = require('gulp-sequence');
 const gulpUglify = require('gulp-uglify');
+const gulpConcat = require('gulp-concat');
+const gulpCleanCSS = require('gulp-clean-css');
 const gulpEslint = require('gulp-eslint');
 const gulpRename = require('gulp-rename');
 const gulpHeader = require('gulp-header');
@@ -51,7 +53,6 @@ gulp.task('build_main', () => walkByRollup([{
     sourcemap: isSourceMap,
 }]));
 
-
 // eslint代码检查打包文件以外的文件
 gulp.task('eslint_others', () => gulp.src([
     resolvePath('build/**/*.js'),
@@ -64,7 +65,14 @@ gulp.task('eslint_others', () => gulp.src([
 // 开启后如果报错会退出
 // .pipe(gulpEslint.failAfterError());
 
-gulp.task('build', ['build_main', 'eslint_others']);
+gulp.task('concat_css', () => gulp.src([
+    resolvePath(`${SOURCE_ROOT_PATH}/css/*.css`),
+])
+    .pipe(gulpConcat('image-process.css'))
+    .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
+
+
+gulp.task('build', ['build_main', 'concat_css', 'eslint_others']);
 
 gulp.task('dist_js_uglify', () => gulp.src([
     resolvePath(`${RELEASE_ROOT_PATH}/**/*.js`),
@@ -80,9 +88,19 @@ gulp.task('dist_js_uglify', () => gulp.src([
     }))
     .pipe(gulpHeader(banner))
     .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
-    
 
-gulp.task('dist', ['dist_js_uglify']);
+// 压缩core css
+gulp.task('clean_css', () => gulp.src([
+    resolvePath(`${RELEASE_ROOT_PATH}/**/*.css`),
+    '!PATH'.replace('PATH', resolvePath(`${RELEASE_ROOT_PATH}/**/*.min.css`)),
+])
+    .pipe(gulpCleanCSS())
+    .pipe(gulpRename({
+        suffix: '.min',
+    }))
+    .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
+
+gulp.task('dist', ['dist_js_uglify', 'clean_css']);
 
 gulp.task('default', (callback) => {
     gulpSequence('build', 'dist')(callback);
@@ -91,6 +109,7 @@ gulp.task('default', (callback) => {
 gulp.task('watch', () => {
     gulp.watch([
         resolvePath(`${SOURCE_ROOT_PATH}/**/*.js`),
+        resolvePath(`${SOURCE_ROOT_PATH}/**/*.css`),
         resolvePath('build/**/*.js'),
         resolvePath('test/**/*.js'),
     ], ['default']);
