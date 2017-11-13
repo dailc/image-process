@@ -116,8 +116,6 @@
         <script type="text/javascript" src="./_common/fileinput.js"></script>
         <script type="text/javascript" src="./_common/exif.js"></script>
         <script type="text/javascript" src="./../dist/image-clip.js"></script>
-        <script type="text/javascript" src="./ejs/ejs.js"></script>
-        <script type="text/javascript" src="./ejs/ejs.h5.js"></script>
         <script>
             var chooseGallery;
             var chooseCamera;
@@ -136,10 +134,6 @@
                 initParams();
                 initListeners();
                 initImgClip();
-                // 临时兼容ejs 2.x，用h5
-                var ejsV6 = /EpointEJS\/6/.test(navigator.userAgent);
-
-                ejsV6 && (ejs.os.ejs = false);
             }
 
             function initParams() {
@@ -155,7 +149,7 @@
 
             function resizeShowImg(b64) {
                 var img = new Image();
-                
+
                 img.src = b64;
                 img.onload = showImgOnload;
             }
@@ -316,27 +310,18 @@
                         tips('请选择图片');
                         return;
                     }
-                    ejs.ui.confirm({
-                        title: "请问",
-                        message: "是否裁剪图片并处理？",
-                        buttonLabels: ['取消', '确定'],
-                        success: function(result) {
-                            if (result.which === 1) {
-                                cropImage.clip(false);
-                                imgData = cropImage.getClipImgData();
-                                ejs.ui.showWaiting('处理中...');
-                                recognizeImg(function() {
-                                    ejs.ui.closeWaiting();
-                                    changeContent(true);
-                                }, function(error) {
-                                    ejs.ui.closeWaiting();
-                                    tips(JSON.stringify(error), true);
-                                });
 
-                            }
-                        },
-                        error: function(err) {}
-                    });
+                    var isConfirm = confirm("是否裁剪图片并处理？");
+
+                    if (isConfirm) {
+                        cropImage.clip(false);
+                        imgData = cropImage.getClipImgData();
+                        recognizeImg(function() {
+                            changeContent(true);
+                        }, function(error) {
+                            tips(JSON.stringify(error), true);
+                        });
+                    }
 
                 });
             }
@@ -356,17 +341,42 @@
 
             function tips(msg, isAlert) {
                 if (isAlert) {
-                    ejs.ui.alert(msg);
+                    alert(msg);
                 } else {
-                    ejs.ui.toast(msg);
+                    toast(msg);
                 }
+            }
+
+            function toast(message) {
+                var CLASS_ACTIVE = 'mui-active';
+                var duration = 2000;
+                var toastDiv = document.createElement('div');
+
+                toastDiv.classList.add('mui-toast-container');
+                toastDiv.innerHTML = `<div class="mui-toast-message">${message}</div>`;
+                toastDiv.addEventListener('webkitTransitionEnd', () => {
+                    if (!toastDiv.classList.contains(CLASS_ACTIVE)) {
+                        toastDiv.parentNode.removeChild(toastDiv);
+                        toastDiv = null;
+                    }
+                });
+                // 点击则自动消失
+                toastDiv.addEventListener('click', () => {
+                    toastDiv.parentNode.removeChild(toastDiv);
+                    toastDiv = null;
+                });
+                document.body.appendChild(toastDiv);
+                toastDiv.classList.add(CLASS_ACTIVE);
+                setTimeout(function() {
+                    toastDiv && toastDiv.classList.remove(CLASS_ACTIVE);
+                }, duration);
             }
 
             function changeContent(isShowContent) {
                 if (isShowContent) {
                     showContent.classList.remove('hidden');
                     clipContent.classList.add('hidden');
-                    
+
                     resizeShowImg(imgData);
                     showImg.src = imgData;
 
