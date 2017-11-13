@@ -5,9 +5,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
         <title>图像处理</title>
+        <link rel="stylesheet" href="mui/mui.css" />
         <link rel="stylesheet" href="./_common/common.css" />
         <link rel="stylesheet" href="../dist/image-clip.css" />
-        <link rel="stylesheet" href="mui/mui.css" />
         <style>
             body {
                 background: #000;
@@ -22,7 +22,7 @@
                 width: 100%;
                 top: 0;
                 left: 0;
-                bottom: 50px;
+                bottom: 57px;
             }
             
             .show-content {
@@ -46,24 +46,25 @@
             }
             
             .choose-gallery {
-                margin-top: -60px;
+                margin-top: -10px;
             }
             
             .choose-camera {
-                margin-top: 0px;
+                margin-top: 50px;
             }
+            
         </style>
     </head>
 
     <body>
         <div class="clip-content">
             <div class="upload-container choose-gallery">
-                <div class="upload-pretty" id="img-file-container">
+                <div class="upload-pretty button-three-dimen">
                     <input type="file" id="targetImg">本地上传
                 </div>
             </div>
             <div class="upload-container choose-camera">
-                <div class="upload-pretty" id="img-file-container">
+                <div class="upload-pretty button-three-dimen">
                     <input type="file" id="targetImgCamera" capture="camera">手机拍摄
                 </div>
             </div>
@@ -199,6 +200,7 @@
                             img,
                             sizeTipsStyle: 0,
                             compressScaleRatio: 1,
+                            iphoneFixedRatio: 2,
                             // 减去顶部间距，底部bar,以及显示间距
                             maxCssHeight: window.innerHeight - 100 - 50 - 20,
                         });

@@ -19,8 +19,8 @@ const defaultetting = {
     isSmooth: true,
     // 放大镜捕获的图像半径
     captureRadius: 30,
-    // ios下主动放大一定系数以解决分辨率过小的模糊问题
-    iosFixedRatio: 2,
+    // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
+    iphoneFixedRatio: 2,
     // 大小框的风格，0-点击时显示，1-恒显示，-1-永不显示
     sizeTipsStyle: 0,
     // 压缩时的放大系数，默认为1，如果增大，代表图像的尺寸会变大(最大不会超过原图)
@@ -72,8 +72,8 @@ class ImgClip {
         let ratio = (window.devicePixelRatio || 1) / backingStore;
         
         ratio *= this.options.compressScaleRatio || 1;
-        if (this.os.ios) {
-            ratio *= this.options.iosFixedRatio || 1;
+        if (this.os.ios && this.os.iphone) {
+            ratio *= this.options.iphoneFixedRatio || 1;
         }
 
         return ratio;
@@ -192,50 +192,10 @@ class ImgClip {
     }
 
     resizeClip() {
-        const startResize = (e) => {
-            this.canResizing = true;
-            this.saveEventState(e);
-            this.canvasMag.classList.remove('clip-hidden');
-            if (this.options.sizeTipsStyle === 0) {
-                this.clipTips.classList.remove('clip-hidden');
-            }
-        };
-        const endResize = () => {
-            this.canResizing = false;
-            this.canvasMag.classList.add('clip-hidden');
-            if (this.options.sizeTipsStyle === 0) {
-                this.clipTips.classList.add('clip-hidden');
-            }
-        };
-
-        for (let i = 0; i < 8; i += 1) {
-            this.clipRectHorns[i].addEventListener('mousedown', startResize);
-            this.clipRectHorns[i].addEventListener('touchstart', startResize);
-
-            this.clipRectHorns[i].addEventListener('mouseup', endResize);
-            this.clipRectHorns[i].addEventListener('touchend', endResize);
-        }
-
-        this.container.addEventListener('mouseleave', endResize);
-        this.container.addEventListener('mouseup', endResize);
-        events.mouseleave = endResize;
-        events.mouseup = endResize;
-
-        const moving = (e) => {
-            if (!this.canResizing) {
-                return;
-            }
-            e.preventDefault();
-            e.stopPropagation();
-            // 区分pageX与clientX
-            const mouseY = e.touches ? e.touches[0].pageY : e.pageY;
-            const mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+        const getCurXY = (mouseX, mouseY) => {
             // 父容器的top和left也要减去
             let curY = mouseY - this.canvasFull.offsetTop - this.container.offsetTop;
             let curX = mouseX - this.canvasFull.offsetLeft - this.container.offsetLeft;
-
-            const clipEventState = this.clipEventState;
-            const target = clipEventState.evnt.target;
 
             curY = Math.min(curY, this.canvasFull.offsetHeight);
             curY = Math.max(0, curY);
@@ -245,6 +205,25 @@ class ImgClip {
             this.curX = curX;
             this.curY = curY;
             
+            return {
+                curX,
+                curY,
+            };
+        };
+        const moving = (e) => {
+            if (!this.canResizing) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            const clipEventState = this.clipEventState;
+            const target = clipEventState.evnt.target;
+            // 区分pageX与clientX
+            const mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+            const mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+            const curCooidinate = getCurXY(mouseX, mouseY);
+            const curX = curCooidinate.curX;
+            const curY = curCooidinate.curY;
             let width;
             let height;
             let left;
@@ -310,6 +289,41 @@ class ImgClip {
 
         events.touchmove = moving;
         events.mousemove = moving;
+        
+        const startResize = (e) => {
+            this.canResizing = true;
+            this.saveEventState(e);
+            this.canvasMag.classList.remove('clip-hidden');
+            if (this.options.sizeTipsStyle === 0) {
+                this.clipTips.classList.remove('clip-hidden');
+            }
+            // 及时更新一次,防止不刷新放大镜
+            const mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+            const mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+            
+            getCurXY(mouseX, mouseY);
+            this.draw();
+        };
+        const endResize = () => {
+            this.canResizing = false;
+            this.canvasMag.classList.add('clip-hidden');
+            if (this.options.sizeTipsStyle === 0) {
+                this.clipTips.classList.add('clip-hidden');
+            }
+        };
+
+        for (let i = 0; i < 8; i += 1) {
+            this.clipRectHorns[i].addEventListener('mousedown', startResize);
+            this.clipRectHorns[i].addEventListener('touchstart', startResize);
+
+            this.clipRectHorns[i].addEventListener('mouseup', endResize);
+            this.clipRectHorns[i].addEventListener('touchend', endResize);
+        }
+
+        this.container.addEventListener('mouseleave', endResize);
+        this.container.addEventListener('mouseup', endResize);
+        events.mouseleave = endResize;
+        events.mouseup = endResize;
     }
 
     saveEventState(e) {
@@ -452,22 +466,43 @@ class ImgClip {
     drawMag() {
         const captureRadius = this.options.captureRadius;
         const centerPoint = this.getRealCoordinate(this.curX, this.curY);
-        const srcX = centerPoint.x - captureRadius;
-        const srcY = centerPoint.y - captureRadius;
         const sWidth = captureRadius * 2;
         const sHeight = captureRadius * 2;
+        let srcX = centerPoint.x - captureRadius;
+        let srcY = centerPoint.y - captureRadius;
+        
+        
+        // TODO: 需要修改回来，仅供调试使用
+        // this.clipTips.innerText = `,x:${srcX.toFixed(0)},y:${srcY.toFixed(0)}`;
 
         if (this.rotateStep & 1) {
             this.ctxMag.clearRect(0, 0, this.canvasMag.height, this.canvasMag.width);
         } else {
             this.ctxMag.clearRect(0, 0, this.canvasMag.width, this.canvasMag.height);
         }
-
+        
+        let drawX = 0;
+        let drawY = 0;
+        
+        if (this.os.ios) {
+            // 兼容ios的Safari不能绘制srcX,srcY为负的情况
+            if (srcY < 0) {
+                // 注意先后顺序
+                drawY = (this.canvasMag.height / 2) * Math.abs(srcY / captureRadius);
+                srcY = 0;
+            }
+            if (srcX < 0) {
+                // 注意先后顺序
+                drawX = (this.canvasMag.width / 2) * Math.abs(srcX / captureRadius);
+                srcX = 0;
+            }
+        }
+        
         // 生成新的图片,内部坐标会使用原图片的尺寸
         this.ctxMag.drawImage(this.img, srcX / this.scale, srcY / this.scale,
             sWidth / this.scale, sHeight / this.scale,
-            0, 0, this.canvasMag.width, this.canvasMag.height);
-
+            drawX, drawY, this.canvasMag.width, this.canvasMag.height);
+            
         const centerX = this.canvasMag.width / 2;
         const centerY = this.canvasMag.height / 2;
         const radius = 5 * this.RATIO_PIXEL;
@@ -476,10 +511,10 @@ class ImgClip {
         this.ctxMag.beginPath();
         this.ctxMag.moveTo(centerX - radius, centerY);
         this.ctxMag.lineTo(centerX + radius, centerY);
-        this.ctxMag.arc(centerX + radius, centerY, 3, 0, 2 * Math.PI);
+        // this.ctxMag.arc(centerX + radius, centerY, 3, 0, 2 * Math.PI);
         this.ctxMag.moveTo(centerX, centerY - radius);
         this.ctxMag.lineTo(centerX, centerY + radius);
-        this.ctxMag.arc(centerX, centerY + radius, 3, 0, 2 * Math.PI);
+        // this.ctxMag.arc(centerX, centerY + radius, 3, 0, 2 * Math.PI);
         this.ctxMag.strokeStyle = '#de3c50';
         this.ctxMag.lineWidth = 3;
         this.ctxMag.stroke();
@@ -553,14 +588,14 @@ class ImgClip {
         const curWidth = realImgSize.width;
         const curHeight = realImgSize.height;
 
-        // 注意，这个变量可能不存在，会影响判断的
+        // 注意，这个变量可能不存在，会影响判断的，所以要确保它存在
         this.rotateStep = this.rotateStep || 0;
 
         // 计算弧度
         const degree = this.rotateStep * 90 * Math.PI / 180;
 
         // 内部的转换矩阵也需要旋转（只不过不需要展示而已-譬如平移操作就无必要）
-        // 注意，重置canvas大小后，以前的rotate也会无效
+        // 注意，重置canvas大小后，以前的rotate也会无效-
         // 否则如果不重置，直接rotate是会在以前的基础上
         if (this.rotateStep === 0) {
             this.canvasTransfer.width = curWidth;

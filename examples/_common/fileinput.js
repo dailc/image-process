@@ -10,7 +10,7 @@
      */
     var defaultSetting = {
         // 可选参数  File Image Camera Image_Camera Image_File Camera_File Text All
-        type: 'Image',
+        type: 'ALL',
         isMulti: false,
         container: ''
     };
@@ -131,7 +131,8 @@
          */
         _init: function() {
             var options = this.options,
-                container = this.container;
+                container = this.container,
+                isEjs = /EpointEJS/.test(navigator.userAgent);;
 
             // 设置单个文件选择需要的 属性
             container.setAttribute('type', 'file');
@@ -150,27 +151,53 @@
                 filter = 'image/*';
                 type = 'DataUrl';
             } else if (type === 'Camera') {
-                filter = 'image/*';
+                if (isEjs) {
+                    filter = 'camera/*';
+                } else {
+                    filter = 'image/*';
+                }
                 type = 'DataUrl';
             } else if (type === 'Image_Camera') {
-                filter = 'image/*';
+                if (isEjs) {
+                    filter = 'image_camera/*';
+                } else {
+                    filter = 'image/*';
+                }
                 type = 'DataUrl';
             } else if (type === 'Image_File') {
-                filter = '*';
+                if (isEjs) {
+                    filter = 'image_file/*';
+                } else {
+                    filter = '*';
+                }
                 type = 'DataUrl';
             } else if (type === 'Camera_File') {
-                filter = '*';
+                if (isEjs) {
+                    filter = 'camera_file/*';
+                } else {
+                    filter = '*';
+                }
                 type = 'DataUrl';
             } else if (type === 'Text') {
                 filter = 'file/*';
                 type = 'Text';
 
             } else if (type === 'File') {
-                filter = '*';
-                type = 'File';
+               if (isEjs) {
+                    filter = 'file/*';
+                    type = 'File';
+                } else {
+                    filter = '*';
+                    type = 'File';
+                }
             } else if (type === 'All') {
-                filter = '*';
-                type = 'DataUrl';
+                if (isEjs) {
+                    filter = '*/*';
+                    type = 'DataUrl';
+                } else {
+                    filter = '*';
+                    type = 'DataUrl';
+                }
             } else {
                 filter = '*';
                 type = 'File';

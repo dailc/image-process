@@ -130,8 +130,8 @@ var defaultetting = {
     isSmooth: true,
     // 放大镜捕获的图像半径
     captureRadius: 30,
-    // ios下主动放大一定系数以解决分辨率过小的模糊问题
-    iosFixedRatio: 2,
+    // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
+    iphoneFixedRatio: 2,
     // 大小框的风格，0-点击时显示，1-恒显示，-1-永不显示
     sizeTipsStyle: 0,
     // 压缩时的放大系数，默认为1，如果增大，代表图像的尺寸会变大(最大不会超过原图)
@@ -184,8 +184,8 @@ var ImgClip$1 = function () {
             var ratio = (window.devicePixelRatio || 1) / backingStore;
 
             ratio *= this.options.compressScaleRatio || 1;
-            if (this.os.ios) {
-                ratio *= this.options.iosFixedRatio || 1;
+            if (this.os.ios && this.os.iphone) {
+                ratio *= this.options.iphoneFixedRatio || 1;
             }
 
             return ratio;
@@ -310,50 +310,10 @@ var ImgClip$1 = function () {
         value: function resizeClip() {
             var _this = this;
 
-            var startResize = function startResize(e) {
-                _this.canResizing = true;
-                _this.saveEventState(e);
-                _this.canvasMag.classList.remove('clip-hidden');
-                if (_this.options.sizeTipsStyle === 0) {
-                    _this.clipTips.classList.remove('clip-hidden');
-                }
-            };
-            var endResize = function endResize() {
-                _this.canResizing = false;
-                _this.canvasMag.classList.add('clip-hidden');
-                if (_this.options.sizeTipsStyle === 0) {
-                    _this.clipTips.classList.add('clip-hidden');
-                }
-            };
-
-            for (var i = 0; i < 8; i += 1) {
-                this.clipRectHorns[i].addEventListener('mousedown', startResize);
-                this.clipRectHorns[i].addEventListener('touchstart', startResize);
-
-                this.clipRectHorns[i].addEventListener('mouseup', endResize);
-                this.clipRectHorns[i].addEventListener('touchend', endResize);
-            }
-
-            this.container.addEventListener('mouseleave', endResize);
-            this.container.addEventListener('mouseup', endResize);
-            events.mouseleave = endResize;
-            events.mouseup = endResize;
-
-            var moving = function moving(e) {
-                if (!_this.canResizing) {
-                    return;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-                // 区分pageX与clientX
-                var mouseY = e.touches ? e.touches[0].pageY : e.pageY;
-                var mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+            var getCurXY = function getCurXY(mouseX, mouseY) {
                 // 父容器的top和left也要减去
                 var curY = mouseY - _this.canvasFull.offsetTop - _this.container.offsetTop;
                 var curX = mouseX - _this.canvasFull.offsetLeft - _this.container.offsetLeft;
-
-                var clipEventState = _this.clipEventState;
-                var target = clipEventState.evnt.target;
 
                 curY = Math.min(curY, _this.canvasFull.offsetHeight);
                 curY = Math.max(0, curY);
@@ -363,6 +323,25 @@ var ImgClip$1 = function () {
                 _this.curX = curX;
                 _this.curY = curY;
 
+                return {
+                    curX: curX,
+                    curY: curY
+                };
+            };
+            var moving = function moving(e) {
+                if (!_this.canResizing) {
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                var clipEventState = _this.clipEventState;
+                var target = clipEventState.evnt.target;
+                // 区分pageX与clientX
+                var mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+                var mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+                var curCooidinate = getCurXY(mouseX, mouseY);
+                var curX = curCooidinate.curX;
+                var curY = curCooidinate.curY;
                 var width = void 0;
                 var height = void 0;
                 var left = void 0;
@@ -422,6 +401,41 @@ var ImgClip$1 = function () {
 
             events.touchmove = moving;
             events.mousemove = moving;
+
+            var startResize = function startResize(e) {
+                _this.canResizing = true;
+                _this.saveEventState(e);
+                _this.canvasMag.classList.remove('clip-hidden');
+                if (_this.options.sizeTipsStyle === 0) {
+                    _this.clipTips.classList.remove('clip-hidden');
+                }
+                // 及时更新一次,防止不刷新放大镜
+                var mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+                var mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+
+                getCurXY(mouseX, mouseY);
+                _this.draw();
+            };
+            var endResize = function endResize() {
+                _this.canResizing = false;
+                _this.canvasMag.classList.add('clip-hidden');
+                if (_this.options.sizeTipsStyle === 0) {
+                    _this.clipTips.classList.add('clip-hidden');
+                }
+            };
+
+            for (var i = 0; i < 8; i += 1) {
+                this.clipRectHorns[i].addEventListener('mousedown', startResize);
+                this.clipRectHorns[i].addEventListener('touchstart', startResize);
+
+                this.clipRectHorns[i].addEventListener('mouseup', endResize);
+                this.clipRectHorns[i].addEventListener('touchend', endResize);
+            }
+
+            this.container.addEventListener('mouseleave', endResize);
+            this.container.addEventListener('mouseup', endResize);
+            events.mouseleave = endResize;
+            events.mouseup = endResize;
         }
     }, {
         key: 'saveEventState',
@@ -568,10 +582,13 @@ var ImgClip$1 = function () {
         value: function drawMag() {
             var captureRadius = this.options.captureRadius;
             var centerPoint = this.getRealCoordinate(this.curX, this.curY);
-            var srcX = centerPoint.x - captureRadius;
-            var srcY = centerPoint.y - captureRadius;
             var sWidth = captureRadius * 2;
             var sHeight = captureRadius * 2;
+            var srcX = centerPoint.x - captureRadius;
+            var srcY = centerPoint.y - captureRadius;
+
+            // TODO: 需要修改回来，仅供调试使用
+            // this.clipTips.innerText = `,x:${srcX.toFixed(0)},y:${srcY.toFixed(0)}`;
 
             if (this.rotateStep & 1) {
                 this.ctxMag.clearRect(0, 0, this.canvasMag.height, this.canvasMag.width);
@@ -579,8 +596,25 @@ var ImgClip$1 = function () {
                 this.ctxMag.clearRect(0, 0, this.canvasMag.width, this.canvasMag.height);
             }
 
+            var drawX = 0;
+            var drawY = 0;
+
+            if (this.os.ios) {
+                // 兼容ios的Safari不能绘制srcX,srcY为负的情况
+                if (srcY < 0) {
+                    // 注意先后顺序
+                    drawY = this.canvasMag.height / 2 * Math.abs(srcY / captureRadius);
+                    srcY = 0;
+                }
+                if (srcX < 0) {
+                    // 注意先后顺序
+                    drawX = this.canvasMag.width / 2 * Math.abs(srcX / captureRadius);
+                    srcX = 0;
+                }
+            }
+
             // 生成新的图片,内部坐标会使用原图片的尺寸
-            this.ctxMag.drawImage(this.img, srcX / this.scale, srcY / this.scale, sWidth / this.scale, sHeight / this.scale, 0, 0, this.canvasMag.width, this.canvasMag.height);
+            this.ctxMag.drawImage(this.img, srcX / this.scale, srcY / this.scale, sWidth / this.scale, sHeight / this.scale, drawX, drawY, this.canvasMag.width, this.canvasMag.height);
 
             var centerX = this.canvasMag.width / 2;
             var centerY = this.canvasMag.height / 2;
@@ -590,10 +624,10 @@ var ImgClip$1 = function () {
             this.ctxMag.beginPath();
             this.ctxMag.moveTo(centerX - radius, centerY);
             this.ctxMag.lineTo(centerX + radius, centerY);
-            this.ctxMag.arc(centerX + radius, centerY, 3, 0, 2 * Math.PI);
+            // this.ctxMag.arc(centerX + radius, centerY, 3, 0, 2 * Math.PI);
             this.ctxMag.moveTo(centerX, centerY - radius);
             this.ctxMag.lineTo(centerX, centerY + radius);
-            this.ctxMag.arc(centerX, centerY + radius, 3, 0, 2 * Math.PI);
+            // this.ctxMag.arc(centerX, centerY + radius, 3, 0, 2 * Math.PI);
             this.ctxMag.strokeStyle = '#de3c50';
             this.ctxMag.lineWidth = 3;
             this.ctxMag.stroke();
@@ -674,14 +708,14 @@ var ImgClip$1 = function () {
             var curWidth = realImgSize.width;
             var curHeight = realImgSize.height;
 
-            // 注意，这个变量可能不存在，会影响判断的
+            // 注意，这个变量可能不存在，会影响判断的，所以要确保它存在
             this.rotateStep = this.rotateStep || 0;
 
             // 计算弧度
             var degree = this.rotateStep * 90 * Math.PI / 180;
 
             // 内部的转换矩阵也需要旋转（只不过不需要展示而已-譬如平移操作就无必要）
-            // 注意，重置canvas大小后，以前的rotate也会无效
+            // 注意，重置canvas大小后，以前的rotate也会无效-
             // 否则如果不重置，直接rotate是会在以前的基础上
             if (this.rotateStep === 0) {
                 this.canvasTransfer.width = curWidth;
