@@ -230,9 +230,13 @@
                         cropImage = new ImageClip({
                             container: '.img-clip',
                             img,
+                            // 0代表按下才显示，1恒显示，-1不显示
                             sizeTipsStyle: 0,
-                            compressScaleRatio: 1,
-                            iphoneFixedRatio: 2,
+                            // 为1一般是屏幕像素x2这个宽高
+                            compressScaleRatio: 1.1,
+                            // iphone中是否继续放大（会基于已有的继续放大，有时候不放大拍出来会模糊）
+                            // 最好compressScaleRatio*iphoneFixedRatio不要超过2
+                            iphoneFixedRatio: 1.8,
                             // 减去顶部间距，底部bar,以及显示间距
                             maxCssHeight: window.innerHeight - 100 - 50 - 20,
                         });
