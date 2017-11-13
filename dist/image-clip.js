@@ -302,7 +302,6 @@ var ImgClip$1 = function () {
                 this.clipRectHorns.push(spanHorn);
             }
 
-            this.clipEventState = {};
             this.resizeClip();
         }
     }, {
@@ -310,6 +309,17 @@ var ImgClip$1 = function () {
         value: function resizeClip() {
             var _this = this;
 
+            this.clipEventState = {};
+
+            var saveEventState = function saveEventState(e) {
+                _this.clipEventState.width = _this.clipRect.offsetWidth;
+                _this.clipEventState.height = _this.clipRect.offsetHeight;
+                _this.clipEventState.left = _this.clipRect.offsetLeft - _this.marginLeft;
+                _this.clipEventState.top = _this.clipRect.offsetTop;
+                _this.clipEventState.mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+                _this.clipEventState.mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+                _this.clipEventState.evnt = e;
+            };
             var getCurXY = function getCurXY(mouseX, mouseY) {
                 // 父容器的top和left也要减去
                 var curY = mouseY - _this.canvasFull.offsetTop - _this.container.offsetTop;
@@ -404,17 +414,11 @@ var ImgClip$1 = function () {
 
             var startResize = function startResize(e) {
                 _this.canResizing = true;
-                _this.saveEventState(e);
                 _this.canvasMag.classList.remove('clip-hidden');
                 if (_this.options.sizeTipsStyle === 0) {
                     _this.clipTips.classList.remove('clip-hidden');
                 }
-                // 及时更新一次,防止不刷新放大镜
-                var mouseY = e.touches ? e.touches[0].pageY : e.pageY;
-                var mouseX = e.touches ? e.touches[0].pageX : e.pageX;
-
-                getCurXY(mouseX, mouseY);
-                _this.draw();
+                saveEventState(e);
             };
             var endResize = function endResize() {
                 _this.canResizing = false;
@@ -436,17 +440,6 @@ var ImgClip$1 = function () {
             this.container.addEventListener('mouseup', endResize);
             events.mouseleave = endResize;
             events.mouseup = endResize;
-        }
-    }, {
-        key: 'saveEventState',
-        value: function saveEventState(e) {
-            this.clipEventState.width = this.clipRect.offsetWidth;
-            this.clipEventState.height = this.clipRect.offsetHeight;
-            this.clipEventState.left = this.clipRect.offsetLeft - this.marginLeft;
-            this.clipEventState.top = this.clipRect.offsetTop;
-            this.clipEventState.mouseX = e.touches ? e.touches[0].pageX : e.pageX;
-            this.clipEventState.mouseY = e.touches ? e.touches[0].pageY : e.pageY;
-            this.clipEventState.evnt = e;
         }
     }, {
         key: 'draw',

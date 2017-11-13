@@ -187,11 +187,21 @@ class ImgClip {
             this.clipRectHorns.push(spanHorn);
         }
 
-        this.clipEventState = {};
         this.resizeClip();
     }
 
     resizeClip() {
+        this.clipEventState = {};
+         
+        const saveEventState = (e) => {
+            this.clipEventState.width = this.clipRect.offsetWidth;
+            this.clipEventState.height = this.clipRect.offsetHeight;
+            this.clipEventState.left = this.clipRect.offsetLeft - this.marginLeft;
+            this.clipEventState.top = this.clipRect.offsetTop;
+            this.clipEventState.mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+            this.clipEventState.mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+            this.clipEventState.evnt = e;
+        };
         const getCurXY = (mouseX, mouseY) => {
             // 父容器的top和left也要减去
             let curY = mouseY - this.canvasFull.offsetTop - this.container.offsetTop;
@@ -292,17 +302,11 @@ class ImgClip {
         
         const startResize = (e) => {
             this.canResizing = true;
-            this.saveEventState(e);
             this.canvasMag.classList.remove('clip-hidden');
             if (this.options.sizeTipsStyle === 0) {
                 this.clipTips.classList.remove('clip-hidden');
             }
-            // 及时更新一次,防止不刷新放大镜
-            const mouseY = e.touches ? e.touches[0].pageY : e.pageY;
-            const mouseX = e.touches ? e.touches[0].pageX : e.pageX;
-            
-            getCurXY(mouseX, mouseY);
-            this.draw();
+            saveEventState(e);
         };
         const endResize = () => {
             this.canResizing = false;
@@ -324,16 +328,6 @@ class ImgClip {
         this.container.addEventListener('mouseup', endResize);
         events.mouseleave = endResize;
         events.mouseup = endResize;
-    }
-
-    saveEventState(e) {
-        this.clipEventState.width = this.clipRect.offsetWidth;
-        this.clipEventState.height = this.clipRect.offsetHeight;
-        this.clipEventState.left = this.clipRect.offsetLeft - this.marginLeft;
-        this.clipEventState.top = this.clipRect.offsetTop;
-        this.clipEventState.mouseX = e.touches ? e.touches[0].pageX : e.pageX;
-        this.clipEventState.mouseY = e.touches ? e.touches[0].pageY : e.pageY;
-        this.clipEventState.evnt = e;
     }
 
     draw() {
