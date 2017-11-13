@@ -36,14 +36,13 @@
             .img-wrap {
                 margin: 0 auto;
             }
-            
-            .show-img {
+            /*.show-img {
                 margin: auto;
                 margin-bottom: 60px;
                 padding: 0;
                 width: 95%;
                 height: auto;
-            }
+            }*/
             
             .choose-gallery {
                 margin-top: -10px;
@@ -52,7 +51,6 @@
             .choose-camera {
                 margin-top: 50px;
             }
-            
         </style>
     </head>
 
@@ -140,7 +138,7 @@
                 initImgClip();
                 // 临时兼容ejs 2.x，用h5
                 var ejsV6 = /EpointEJS\/6/.test(navigator.userAgent);
-                
+
                 ejsV6 && (ejs.os.ejs = false);
             }
 
@@ -153,6 +151,40 @@
                 clipAction = document.querySelector('.clip-action');
                 showContent = document.querySelector('.show-content');
                 showImg = document.querySelector('.show-img');
+            }
+
+            function resizeShowImg(b64) {
+                var img = new Image();
+                
+                img.src = b64;
+                img.onload = showImgOnload;
+            }
+
+            function showImgOnload() {
+                // 必须用一个新的图片加载，否则如果只用showImg的话永远都是第1张
+                // margin的话由于有样式，所以自动控制了
+                var width = this.width;
+                var height = this.height;
+                var wPerH = width / height;
+                var MAX_WIDTH = Math.min(window.innerWidth, width);
+                var MAX_HEIGHT = Math.min(window.innerHeight - 100 - 50 - 20, height);
+                var legalWidth = MAX_WIDTH;
+                var legalHeight = legalWidth / wPerH;
+
+                if (MAX_WIDTH && legalWidth > MAX_WIDTH) {
+                    legalWidth = MAX_WIDTH;
+                    legalHeight = legalWidth / wPerH;
+                }
+                if (MAX_HEIGHT && legalHeight > MAX_HEIGHT) {
+                    legalHeight = MAX_HEIGHT;
+                    legalWidth = legalHeight * wPerH;
+                }
+
+                var marginTop = (window.innerHeight - 100 - 50 - 20 - legalHeight) / 2;
+
+                showImg.style.marginTop = marginTop + 'px';
+                showImg.style.width = legalWidth + 'px';
+                showImg.style.height = legalHeight + 'px';
             }
 
             function initImgClip() {
@@ -194,7 +226,7 @@
                 img.onload = function() {
                     EXIF.getData(img, function() {
                         var orientation = EXIF.getTag(this, 'Orientation');
-                        
+
                         cropImage = new ImageClip({
                             container: '.img-clip',
                             img,
@@ -204,7 +236,7 @@
                             // 减去顶部间距，底部bar,以及显示间距
                             maxCssHeight: window.innerHeight - 100 - 50 - 20,
                         });
-                        
+
                         // 6代表图片需要顺时针修复（默认逆时针处理了，所以需要顺过来修复）
                         switch (orientation) {
                             case 6:
@@ -330,7 +362,8 @@
                 if (isShowContent) {
                     showContent.classList.remove('hidden');
                     clipContent.classList.add('hidden');
-
+                    
+                    resizeShowImg(imgData);
                     showImg.src = imgData;
 
                 } else {
