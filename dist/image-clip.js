@@ -117,7 +117,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
- * ios内部显示的图片数据和img的原始图片是不一样的，坐标系不一样
+ * ios手机竖拍时会旋转，需要外部引入exif去主动旋转
  */
 
 var defaultetting = {
@@ -143,8 +143,6 @@ var defaultetting = {
     isUseOriginSize: false,
     mime: 'image/jpeg'
 };
-var domChildren = [];
-var events = {};
 
 var ImgClip$1 = function () {
     /**
@@ -155,13 +153,12 @@ var ImgClip$1 = function () {
     function ImgClip(options) {
         _classCallCheck(this, ImgClip);
 
+        osMixin(this);
         this.options = extend({}, defaultetting, options);
         this.container = selector(this.options.container);
-
-        osMixin(this);
-        this.clear();
-
         this.img = this.options.img;
+        this.domChildren = [];
+        this.events = {};
 
         this.initCanvas();
         this.initClip();
@@ -195,17 +192,20 @@ var ImgClip$1 = function () {
     }, {
         key: 'clear',
         value: function clear() {
-            for (var i = 0; i < domChildren.length; i += 1) {
-                this.container.removeChild(domChildren[i]);
-            }
-            domChildren = [];
+            var lenD = this.domChildren && this.domChildren.length || 0;
 
-            var allEventNames = Object.keys(events);
-
-            for (var _i = 0; _i < allEventNames.length; _i += 1) {
-                this.container.removeEventListener(allEventNames[_i], events[allEventNames[_i]]);
+            for (var i = 0; i < lenD; i += 1) {
+                this.container.removeChild(this.domChildren[i]);
             }
-            events = {};
+            this.domChildren = null;
+
+            var allEventNames = Object.keys(this.events || {});
+            var lenE = allEventNames && allEventNames.length || 0;
+
+            for (var _i = 0; _i < lenE; _i += 1) {
+                this.container.removeEventListener(allEventNames[_i], this.events[allEventNames[_i]]);
+            }
+            this.events = null;
         }
     }, {
         key: 'initCanvas',
@@ -225,7 +225,7 @@ var ImgClip$1 = function () {
             this.oldHeight = oldWidth / wPerH;
             this.resizeCanvas(oldWidth, this.oldHeight);
             this.container.appendChild(this.canvasFull);
-            domChildren.push(this.canvasFull);
+            this.domChildren.push(this.canvasFull);
         }
     }, {
         key: 'resizeCanvas',
@@ -262,7 +262,7 @@ var ImgClip$1 = function () {
 
             this.clipRect = clipRect;
             this.container.appendChild(this.clipRect);
-            domChildren.push(this.clipRect);
+            this.domChildren.push(this.clipRect);
 
             // 添加tips
             var clipTips = document.createElement('span');
@@ -411,8 +411,8 @@ var ImgClip$1 = function () {
             this.container.addEventListener('touchmove', moving);
             this.container.addEventListener('mousemove', moving);
 
-            events.touchmove = moving;
-            events.mousemove = moving;
+            this.events.touchmove = moving;
+            this.events.mousemove = moving;
 
             var startResize = function startResize(e) {
                 _this.canResizing = true;
@@ -440,8 +440,8 @@ var ImgClip$1 = function () {
 
             this.container.addEventListener('mouseleave', endResize);
             this.container.addEventListener('mouseup', endResize);
-            events.mouseleave = endResize;
-            events.mouseup = endResize;
+            this.events.mouseleave = endResize;
+            this.events.mouseup = endResize;
         }
     }, {
         key: 'draw',
@@ -632,7 +632,7 @@ var ImgClip$1 = function () {
             this.ctxMag = this.canvasMag.getContext('2d');
             this.smoothCtx(this.ctxMag);
             this.container.appendChild(this.canvasMag);
-            domChildren.push(this.canvasMag);
+            this.domChildren.push(this.canvasMag);
 
             // 需要初始化一个高度，否则如果旋转时会造不对
             // 捕获直径*像素比
@@ -648,7 +648,7 @@ var ImgClip$1 = function () {
             this.ctxTransfer = this.canvasTransfer.getContext('2d');
             this.smoothCtx(this.ctxTransfer);
             this.container.appendChild(this.canvasTransfer);
-            domChildren.push(this.canvasTransfer);
+            this.domChildren.push(this.canvasTransfer);
         }
     }, {
         key: 'smoothCtx',

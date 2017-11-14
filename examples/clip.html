@@ -220,7 +220,8 @@
                 img.onload = function() {
                     EXIF.getData(img, function() {
                         var orientation = EXIF.getTag(this, 'Orientation');
-
+                        
+                        cropImage && cropImage.destroy();
                         cropImage = new ImageClip({
                             container: '.img-clip',
                             img,
@@ -233,6 +234,13 @@
                             iphoneFixedRatio: 1.8,
                             // 减去顶部间距，底部bar,以及显示间距
                             maxCssHeight: window.innerHeight - 100 - 50 - 20,
+                            // 放大镜捕获的图像半径
+                            captureRadius: 30,
+                            // 是否采用原图像素（不会压缩）
+                            isUseOriginSize: false,
+                            // 压缩质量
+                            quality: 0.92,
+                            mime: 'image/jpeg',
                         });
 
                         // 6代表图片需要顺时针修复（默认逆时针处理了，所以需要顺过来修复）
@@ -387,18 +395,21 @@
             }
 
             function b64ToBlob(urlData) {
+                var arr = urlData.split(',');
+                var mime = arr[0].match(/:(.*?);/)[1] || 'image/png';
                 // 去掉url的头，并转化为byte
-                var bytes = window.atob(urlData.split(',')[1]);
+                var bytes = window.atob(arr[1]);
 
                 // 处理异常,将ascii码小于0的转换为大于0
                 var ab = new ArrayBuffer(bytes.length);
+                // 生成视图（直接针对内存）：8位无符号整数，长度1个字节
                 var ia = new Uint8Array(ab);
                 for (var i = 0; i < bytes.length; i++) {
                     ia[i] = bytes.charCodeAt(i);
                 }
 
                 return new Blob([ab], {
-                    type: 'image/png'
+                    type: mime
                 });
             }
 
