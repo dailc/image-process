@@ -28,6 +28,8 @@ const defaultetting = {
     // 限制canvas显示的最大高度（不是实际高度，是css显示的最大高度）
     // 单位是像素，不传的话不限制
     maxCssHeight: null,
+    // 是否采用原图像素（不会压缩）
+    isUseOriginSize: false,
     mime: 'image/jpeg',
 };
 let domChildren = [];
@@ -465,10 +467,6 @@ class ImgClip {
         let srcX = centerPoint.x - captureRadius;
         let srcY = centerPoint.y - captureRadius;
         
-        
-        // TODO: 需要修改回来，仅供调试使用
-        // this.clipTips.innerText = `,x:${srcX.toFixed(0)},y:${srcY.toFixed(0)}`;
-
         if (this.rotateStep & 1) {
             this.ctxMag.clearRect(0, 0, this.canvasMag.height, this.canvasMag.width);
         } else {
@@ -552,12 +550,12 @@ class ImgClip {
         let height = curHeight;
 
         if (this.rotateStep & 1) {
-            if (this.canvasFull.width > this.img.height) {
+            if (this.options.isUseOriginSize || this.canvasFull.width > this.img.height) {
                 // 最大不会超过原图的尺寸
                 width = this.img.width * curWidth / this.canvasFull.height;
                 height = this.img.height * curHeight / this.canvasFull.width;
             }
-        } else if (this.canvasFull.width > this.img.width) {
+        } else if (this.options.isUseOriginSize || this.canvasFull.width > this.img.width) {
             // 最大不会超过原图的尺寸
             width = this.img.width * curWidth / this.canvasFull.width;
             height = this.img.height * curHeight / this.canvasFull.height;
