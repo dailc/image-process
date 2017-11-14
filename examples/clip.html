@@ -238,6 +238,8 @@
                             captureRadius: 30,
                             // 是否采用原图像素（不会压缩）
                             isUseOriginSize: false,
+                            // 是否固定框高，优先级最大，设置后其余所有系数都无用直接使用这个固定的宽，高度自适应
+                            forceWidth: 0,
                             // 压缩质量
                             quality: 0.92,
                             mime: 'image/jpeg',

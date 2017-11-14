@@ -30,6 +30,8 @@ const defaultetting = {
     maxCssHeight: null,
     // 是否采用原图像素（不会压缩）
     isUseOriginSize: false,
+    // 使用强制的宽度，如果使用，其它宽高比系数都会失效，默认整图使用这个宽度
+    forceWidth: null,
     mime: 'image/jpeg',
 };
 
@@ -546,6 +548,8 @@ class ImgClip {
     }
 
     getRealFinalImgSize(curWidth, curHeight) {
+        const wPerH = this.canvasFull.width / this.canvasFull.height;
+        const forceWidth = this.options.forceWidth || 0;
         let width = curWidth;
         let height = curHeight;
 
@@ -555,10 +559,20 @@ class ImgClip {
                 width = this.img.width * curWidth / this.canvasFull.height;
                 height = this.img.height * curHeight / this.canvasFull.width;
             }
+           
+            if (forceWidth) {
+                // 使用固定宽
+                width = forceWidth * curWidth / this.canvasFull.height;
+                height = forceWidth / wPerH * curHeight / this.canvasFull.width;
+            }
         } else if (this.options.isUseOriginSize || this.canvasFull.width > this.img.width) {
             // 最大不会超过原图的尺寸
             width = this.img.width * curWidth / this.canvasFull.width;
             height = this.img.height * curHeight / this.canvasFull.height;
+        } else if (forceWidth) {
+            // 使用固定宽
+            width = forceWidth * curWidth / this.canvasFull.width;
+            height = forceWidth / wPerH * curHeight / this.canvasFull.height;
         }
 
         return {
