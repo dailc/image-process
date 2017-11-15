@@ -8,50 +8,7 @@
         <link rel="stylesheet" href="mui/mui.css" />
         <link rel="stylesheet" href="./_common/common.css" />
         <link rel="stylesheet" href="../dist/image-clip.css" />
-        <style>
-            body {
-                background: #000;
-            }
-            
-            .img-clip {
-                margin-top: 100px;
-            }
-            
-            .clip-content {
-                position: absolute;
-                width: 100%;
-                top: 0;
-                left: 0;
-                bottom: 57px;
-            }
-            
-            .show-content {
-                position: relative;
-                top: 40px;
-                margin: 0 auto;
-                text-align: center;
-                vertical-align: middle;
-            }
-            
-            .img-wrap {
-                margin: 0 auto;
-            }
-            /*.show-img {
-                margin: auto;
-                margin-bottom: 60px;
-                padding: 0;
-                width: 95%;
-                height: auto;
-            }*/
-            
-            .choose-gallery {
-                margin-top: -10px;
-            }
-            
-            .choose-camera {
-                margin-top: 50px;
-            }
-        </style>
+        <link rel="stylesheet" href="_common/clip.css" />
     </head>
 
     <body>
@@ -147,40 +104,6 @@
                 showImg = document.querySelector('.show-img');
             }
 
-            function resizeShowImg(b64) {
-                var img = new Image();
-
-                img.src = b64;
-                img.onload = showImgOnload;
-            }
-
-            function showImgOnload() {
-                // 必须用一个新的图片加载，否则如果只用showImg的话永远都是第1张
-                // margin的话由于有样式，所以自动控制了
-                var width = this.width;
-                var height = this.height;
-                var wPerH = width / height;
-                var MAX_WIDTH = Math.min(window.innerWidth, width);
-                var MAX_HEIGHT = Math.min(window.innerHeight - 100 - 50 - 20, height);
-                var legalWidth = MAX_WIDTH;
-                var legalHeight = legalWidth / wPerH;
-
-                if (MAX_WIDTH && legalWidth > MAX_WIDTH) {
-                    legalWidth = MAX_WIDTH;
-                    legalHeight = legalWidth / wPerH;
-                }
-                if (MAX_HEIGHT && legalHeight > MAX_HEIGHT) {
-                    legalHeight = MAX_HEIGHT;
-                    legalWidth = legalHeight * wPerH;
-                }
-
-                var marginTop = (window.innerHeight - 100 - 50 - 20 - legalHeight) / 2;
-
-                showImg.style.marginTop = marginTop + 'px';
-                showImg.style.width = legalWidth + 'px';
-                showImg.style.height = legalHeight + 'px';
-            }
-
             function initImgClip() {
                 new FileInput({
                     container: '#targetImg',
@@ -228,7 +151,7 @@
                             // 0代表按下才显示，1恒显示，-1不显示
                             sizeTipsStyle: 0,
                             // 为1一般是屏幕像素x2这个宽高
-                            // 最终的大小为：选择框像素*屏幕像素比（手机中一般为2）*compressScaleRatio
+                            // 最终的大小为：屏幕像素*屏幕像素比（手机中一般为2）*compressScaleRatio
                             compressScaleRatio: 1.1,
                             // iphone中是否继续放大：x*iphoneFixedRatio
                             // 最好compressScaleRatio*iphoneFixedRatio不要超过2
@@ -240,7 +163,7 @@
                             // 是否采用原图像素（不会压缩）
                             isUseOriginSize: false,
                             // 增加最大宽度，增加后最大不会超过这个宽度
-                            maxWidth: 2000,
+                            maxWidth: 0,
                             // 是否固定框高，优先级最大，设置后其余所有系数都无用直接使用这个固定的宽，高度自适应
                             forceWidth: 0,
                             // 同上，但是一般不建议设置，因为很可能会改变宽高比导致拉升，特殊场景下使用
@@ -261,6 +184,40 @@
 
                     });
                 };
+            }
+            
+            function resizeShowImg(b64) {
+                var img = new Image();
+
+                img.src = b64;
+                img.onload = showImgOnload;
+            }
+
+            function showImgOnload() {
+                // 必须用一个新的图片加载，否则如果只用showImg的话永远都是第1张
+                // margin的话由于有样式，所以自动控制了
+                var width = this.width;
+                var height = this.height;
+                var wPerH = width / height;
+                var MAX_WIDTH = Math.min(window.innerWidth, width);
+                var MAX_HEIGHT = Math.min(window.innerHeight - 50 - 100, height);
+                var legalWidth = MAX_WIDTH;
+                var legalHeight = legalWidth / wPerH;
+
+                if (MAX_WIDTH && legalWidth > MAX_WIDTH) {
+                    legalWidth = MAX_WIDTH;
+                    legalHeight = legalWidth / wPerH;
+                }
+                if (MAX_HEIGHT && legalHeight > MAX_HEIGHT) {
+                    legalHeight = MAX_HEIGHT;
+                    legalWidth = legalHeight * wPerH;
+                }
+
+                var marginTop = (window.innerHeight - 50 - legalHeight) / 2;
+
+                showImg.style.marginTop = marginTop + 'px';
+                showImg.style.width = legalWidth + 'px';
+                showImg.style.height = legalHeight + 'px';
             }
 
             function changeImgClipShow(isClip) {
@@ -301,7 +258,7 @@
                         tips('请选择图片');
                         return;
                     }
-                    cropImage.clipRectReset();
+                    cropImage.resetClipRect();
                 });
 
                 document.querySelector('#btn-rotate-anticlockwise').addEventListener('click', function() {
@@ -427,7 +384,7 @@
             }
 
             function recognizeImg(success, error) {
-                // 里面正常有：裁边，摆正，梯形矫正，蜕化等算法操作
+                // 里面正常有：裁边，摆正，梯形矫正，锐化等算法操作
                 success();
             }
 

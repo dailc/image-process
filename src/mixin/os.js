@@ -30,6 +30,13 @@ export default function osMixin(hybrid) {
             this.os.version = ipad[2].replace(/_/g, '.');
         }
         
+        // quickhybrid的容器
+        const quick = ua.match(/QuickHybrid/i);
+
+        if (quick) {
+            this.os.quick = true;
+        }
+        
         // epoint的容器
         const ejs = ua.match(/EpointEJS/i);
 
@@ -43,8 +50,8 @@ export default function osMixin(hybrid) {
             this.os.dd = true;
         }
 
-        // 如果ejs和钉钉都不是，则默认为h5
-        if (!ejs && !dd) {
+        // 如果ejs和钉钉以及quick都不是，则默认为h5
+        if (!ejs && !dd && !quick) {
             this.os.h5 = true;
         }
     };

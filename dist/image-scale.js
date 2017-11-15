@@ -475,22 +475,36 @@ var defaultArgs = {
     // 0: nearestNeighbor
     // 1: bilinearInterpolation
     // 2: bicubicInterpolation
-    processType: 0
+    // 3: bicubicInterpolation2
+    processType: 1
 };
 
 function scaleMixin(ImageScale) {
     var api = ImageScale;
 
     /**
-     * 对img对象进行缩放，返回一个base64字符串
-     * @param {Image} image 目标image
+     * 对ImageData类型的数据进行缩放，将数据放入新的imageData中
+     * @param {ImageData} imageData 目标ImageData
+     * @param {ImageData} newImageData 新的ImageData
+     * @param {Object} args 额外参数
+     */
+    api.scaleImageData = function scaleImageData(imageData, newImageData, args) {
+        var finalArgs = extend({}, defaultArgs, args);
+        var processTypes = [nearestNeighborInterpolation, bilinearInterpolation, bicubicInterpolation, bicubicInterpolation$1];
+        var curDealFunc = processTypes[finalArgs.processType];
+
+        curDealFunc(imageData, newImageData);
+    };
+
+    /**
+     * 对Image类型的对象进行缩放，返回一个base64字符串
+     * @param {Image} image 目标Image
      * @return {String} 返回目标图片的b64字符串
      */
     api.scaleImage = function scaleImage(image, args) {
         var width = image.width;
         var height = image.height;
         var finalArgs = extend({}, defaultArgs, args);
-        var processTypes = [nearestNeighborInterpolation, bilinearInterpolation, bicubicInterpolation, bicubicInterpolation$1];
 
         var canvasTransfer = document.createElement('canvas');
         var ctxTransfer = canvasTransfer.getContext('2d');
@@ -503,7 +517,7 @@ function scaleMixin(ImageScale) {
         var imageData = ctxTransfer.getImageData(0, 0, width, height);
         var newImageData = ctxTransfer.createImageData(finalArgs.width, finalArgs.height);
 
-        newImageData = processTypes[finalArgs.processType](imageData, newImageData, finalArgs);
+        api.scaleImageData(imageData, newImageData, finalArgs);
 
         canvasTransfer.width = newImageData.width;
         canvasTransfer.height = newImageData.height;

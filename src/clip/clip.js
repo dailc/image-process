@@ -13,30 +13,30 @@ const defaultetting = {
     container: '#imgclip',
     // 必须是一个image对象
     img: null,
-    // 压缩质量
-    quality: 0.92,
     // 是否开启平滑
     isSmooth: true,
     // 放大镜捕获的图像半径
     captureRadius: 30,
-    // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
-    iphoneFixedRatio: 2,
-    // 大小框的风格，0-点击时显示，1-恒显示，-1-永不显示
+    // 压缩质量
+    quality: 0.92,
+    mime: 'image/jpeg',
+    // 限制canvas显示的最大高度（不是实际高度，是css显示的最大高度）
+    // 单位是像素，不传的话不限制
+    maxCssHeight: 0,
+    // 大小提示框的风格，0-点击时显示，1-恒显示，-1-永不显示
     sizeTipsStyle: 0,
     // 压缩时的放大系数，默认为1，如果增大，代表图像的尺寸会变大(最大不会超过原图)
     compressScaleRatio: 1,
-    // 限制canvas显示的最大高度（不是实际高度，是css显示的最大高度）
-    // 单位是像素，不传的话不限制
-    maxCssHeight: null,
+    // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
+    iphoneFixedRatio: 2,
     // 是否采用原图像素（不会压缩）
     isUseOriginSize: false,
     // 增加最大宽度，增加后最大不会超过这个宽度
-    maxWidth: null,
+    maxWidth: 0,
     // 使用强制的宽度，如果使用，其它宽高比系数都会失效，默认整图使用这个宽度
-    forceWidth: null,
+    forceWidth: 0,
     // 同上，但是一般不建议设置，因为很可能会改变宽高比导致拉升，特殊场景下使用
-    forceHeight: null,
-    mime: 'image/jpeg',
+    forceHeight: 0,
 };
 
 class ImgClip {
@@ -57,7 +57,7 @@ class ImgClip {
         this.initClip();
         this.initMagnifier();
         this.initTransferCanvas();
-        this.clipRectReset();
+        this.resetClipRect();
     }
 
     /**
@@ -655,7 +655,7 @@ class ImgClip {
         this.clipImgData = this.canvasTransfer.toDataURL(this.options.mime, this.options.quality);
     }
 
-    clipRectReset() {
+    resetClipRect() {
         this.clipRect.style.left = `${this.marginLeft || 0}px`;
         this.clipRect.style.top = 0;
         this.clipRect.style.width = `${this.canvasFull.width / this.RATIO_PIXEL}px`;
@@ -712,7 +712,7 @@ class ImgClip {
             this.ctxMag.translate(-this.canvasMag.height, 0);
         }
 
-        this.clipRectReset();
+        this.resetClipRect();
     }
 
     destroy() {

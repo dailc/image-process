@@ -1,5 +1,10 @@
+import ImgClip from './clip/clip';
+import scaleMixin from './scale/scale';
+
 const ImageProcess = {};
 
-// TODO: 需要添加一些图像处理方法
+// 所有处理的合集
+scaleMixin(ImageProcess);
+ImageProcess.ImgClip = ImgClip;
 
 export default ImageProcess;

@@ -104,7 +104,7 @@ gulp.task('eslint_others', () => gulp.src([
 // .pipe(gulpEslint.failAfterError());
 
 gulp.task('concat_css', () => gulp.src([
-    resolvePath(`${SOURCE_ROOT_PATH}/css/*.css`),
+    resolvePath(`${SOURCE_ROOT_PATH}/**/*.css`),
 ])
     .pipe(gulpConcat('image-process.css'))
     .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
