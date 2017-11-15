@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+        <title>图像压缩</title>
+        <link rel="stylesheet" href="./_common/common.css" />
+        <style>
+            .img-container {
+                margin-top: 30px;
+                overflow: hidden;
+            }
+            
+            .source-img {
+                display: block;
+                border: 1px solid #000;
+            }
+            
+            .target-img {
+                display: block;
+                border: 1px solid #000;
+            }
+            
+            .btn-block {
+                margin: 5px;
+                padding: 5px;
+                border: 1px solid #000;
+            }
+            
+            .container-input {
+                border: 1px solid #000;
+            }
+            
+            .input-block {
+                margin: 5px;
+                padding: 5px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div>
+            <input type="file" id="imgFile">
+            <div class="container-input">
+                <div class="input-block">
+                    <label for="quality">quality</label> <input type="text" value="0.92" id="quality" />
+                    <label for="mime">mime</label> <input type="text" value="image/jpeg" id="mime" />
+                </div>
+                <div class="input-block">
+                    <label for="compressScaleRatio">compressScaleRatio</label> <input type="text" value="1" id="compressScaleRatio" />
+                    <label for="iphoneFixedRatio">iphoneFixedRatio</label> <input type="text" value="2" id="iphoneFixedRatio" />
+                </div>
+                <div class="input-block">
+                    <label for="isUseOriginSize">isUseOriginSize</label> <input type="text" value="false" id="isUseOriginSize" />
+                    <label for="maxWidth">maxWidth</label> <input type="text" value="0" id="maxWidth" />
+                </div>
+                <div class="input-block">
+                    <label for="forceWidth">forceWidth</label> <input type="text" value="0" id="forceWidth" />
+                    <label for="forceHeight">forceHeight</label> <input type="text" value="0" id="forceHeight" />
+                </div>
+            </div>
+
+            <div class="btn-block">
+                <button id="btn_compress">压缩</button>
+            </div>
+            <div class="img-container">
+                <img class="source-img" />
+                <img class="target-img" />
+            </div>
+        </div>
+        <script type="text/javascript" src="./_common/fileinput.js"></script>
+        <script type="text/javascript" src="./../dist/image-scale.js"></script>
+        <script>
+            var sourceImgDom;
+            var targetImgDom;
+            var sourceImg;
+            var sourceBase64;
+
+            initPage();
+
+            function initPage() {
+                initParams();
+                initListeners();
+                initImg();
+            }
+
+            function initParams() {
+                sourceImgDom = document.querySelector('.source-img');
+                targetImgDom = document.querySelector('.target-img');
+            }
+
+            function initListeners() {
+                document.getElementById('btn_compress').addEventListener('click', function(e) {
+                    processImg(sourceImg, {
+                        // 压缩质量
+                        quality: +(document.getElementById('quality').value) || 0.92,
+                        mime: (document.getElementById('mime').value) || 'image/jpeg',
+                        // 压缩时的放大系数，默认为1，如果增大，代表图像的尺寸会变大(最大不会超过原图)
+                        compressScaleRatio: +(document.getElementById('compressScaleRatio').value) || 1,
+                        // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
+                        iphoneFixedRatio: +(document.getElementById('iphoneFixedRatio').value) || 2,
+                        // 是否采用原图像素（不会改变大小）
+                        isUseOriginSize: !!(document.getElementById('isUseOriginSize').value) || false,
+                        // 增加最大宽度，增加后最大不会超过这个宽度
+                        maxWidth: +(document.getElementById('maxWidth').value) || 0,
+                        // 使用强制的宽度，如果使用，其它宽高比系数都会失效，默认整图使用这个宽度
+                        forceWidth: +(document.getElementById('forceWidth').value) || 0,
+                        // 同上，但是一般不建议设置，因为很可能会改变宽高比导致拉升，特殊场景下使用
+                        forceHeight: +(document.getElementById('forceHeight').value) || 0,
+                    });
+                });
+            }
+
+            function initImg() {
+                new FileInput({
+                    container: '#imgFile',
+                    isMulti: false,
+                    type: 'Image_Camera',
+                    success: function(b64, file, detail) {
+                        // console.log("选择:" + b64);
+                        console.log("fileName:" + file.name);
+
+                        loadImg(b64);
+                    },
+                    error: function(error) {
+                        console.error(error);
+                    }
+                });
+            }
+
+            function loadImg(b64) {
+                sourceImgDom.src = b64;
+
+                var img = new Image();
+
+                img.src = b64;
+
+                img.onload = function() {
+                    sourceBase64 = b64;
+                    sourceImg = img;
+                };
+            }
+
+            function processImg(img, args) {
+                if (!img) {
+                    alert('请选择原图');
+
+                    return;
+                }
+
+                var newBase64 = ImageScale.compressImage(img, args);
+
+                var newImg = new Image();
+
+                newImg.src = newBase64;
+
+                newImg.onload = function() {
+                    targetImgDom.src = newBase64;
+
+                    console.log('压缩前w:' + img.width + ',h:' + img.height);
+                    console.log('压缩后w:' + newImg.width + ',h:' + newImg.height);
+                };
+            }
+        </script>
+    </body>
+
+</html>

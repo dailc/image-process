@@ -479,6 +479,24 @@ var defaultArgs = {
     processType: 1
 };
 
+var defaultArgsCompress = {
+    // 压缩质量
+    quality: 0.92,
+    mime: 'image/jpeg',
+    // 压缩时的放大系数，默认为1，如果增大，代表图像的尺寸会变大(最大不会超过原图)
+    compressScaleRatio: 1,
+    // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
+    iphoneFixedRatio: 2,
+    // 是否采用原图像素（不会改变大小）
+    isUseOriginSize: false,
+    // 增加最大宽度，增加后最大不会超过这个宽度
+    maxWidth: 0,
+    // 使用强制的宽度，如果使用，其它宽高比系数都会失效，默认整图使用这个宽度
+    forceWidth: 0,
+    // 同上，但是一般不建议设置，因为很可能会改变宽高比导致拉升，特殊场景下使用
+    forceHeight: 0
+};
+
 function scaleMixin(ImageScale) {
     var api = ImageScale;
 
@@ -499,6 +517,7 @@ function scaleMixin(ImageScale) {
     /**
      * 对Image类型的对象进行缩放，返回一个base64字符串
      * @param {Image} image 目标Image
+     * @param {Object} args 额外参数
      * @return {String} 返回目标图片的b64字符串
      */
     api.scaleImage = function scaleImage(image, args) {
@@ -529,6 +548,63 @@ function scaleMixin(ImageScale) {
         // console.log('压缩时w:' + canvasTransfer.width + ',' + canvasTransfer.height);
 
         return canvasTransfer.toDataURL(finalArgs.mime, 0.9);
+    };
+
+    /**
+     * 压缩图片，返回一个base64字符串
+     * 与scale的区别是这用的是canvas默认缩放，并且有很多参数可控
+     * @param {Image} image 目标Image
+     * @param {Object} args 额外参数
+     * @return {String} 返回目标图片的b64字符串
+     */
+    api.compressImage = function compressImage(image, args) {
+        var width = image.width;
+        var height = image.height;
+        var wPerH = width / height;
+        var finalArgs = extend({}, defaultArgsCompress, args);
+
+        var canvasTransfer = document.createElement('canvas');
+        var ctxTransfer = canvasTransfer.getContext('2d');
+
+        var ratio = window.devicePixelRatio || 1;
+
+        ratio *= finalArgs.compressScaleRatio || 1;
+        if (navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/)) {
+            ratio *= finalArgs.iphoneFixedRatio || 1;
+        }
+
+        var finalWidth = window.innerWidth * ratio;
+
+        if (finalArgs.isUseOriginSize || finalWidth > width) {
+            // 最大不会超过原图的尺寸
+            finalWidth = width;
+        }
+
+        var maxWidth = finalArgs.maxWidth;
+
+        if (maxWidth && width > maxWidth && finalWidth > maxWidth) {
+            // 考虑到之前已经进行不超过原图的判断了
+            finalWidth = maxWidth;
+        }
+        var forceWidth = finalArgs.forceWidth;
+        var forceHeight = finalArgs.forceHeight;
+
+        if (forceWidth) {
+            // 使用固定宽
+            finalWidth = forceWidth;
+        }
+
+        var finalHeight = finalWidth / wPerH;
+
+        if (forceHeight) {
+            finalHeight = forceHeight;
+        }
+
+        canvasTransfer.width = finalWidth;
+        canvasTransfer.height = finalHeight;
+        ctxTransfer.drawImage(image, 0, 0, width, height, 0, 0, canvasTransfer.width, canvasTransfer.height);
+
+        return canvasTransfer.toDataURL(finalArgs.mime, finalArgs.quality);
     };
 }
 
