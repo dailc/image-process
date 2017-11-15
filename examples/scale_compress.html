@@ -9,7 +9,7 @@
         <style>
             .img-container {
                 margin-top: 30px;
-                overflow: hidden;
+                overflow: scroll;
             }
             
             .source-img {
@@ -49,7 +49,7 @@
                 </div>
                 <div class="input-block">
                     <label for="compressScaleRatio">compressScaleRatio</label> <input type="text" value="1" id="compressScaleRatio" />
-                    <label for="iphoneFixedRatio">iphoneFixedRatio</label> <input type="text" value="2" id="iphoneFixedRatio" />
+                    <label for="iphoneFixedRatio">iphoneFixedRatio</label> <input type="text" value="1.5" id="iphoneFixedRatio" />
                 </div>
                 <div class="input-block">
                     <label for="isUseOriginSize">isUseOriginSize</label> <input type="text" value="false" id="isUseOriginSize" />
@@ -63,6 +63,7 @@
 
             <div class="btn-block">
                 <button id="btn_compress">压缩</button>
+                <div id="tips"></div>
             </div>
             <div class="img-container">
                 <img class="source-img" />
@@ -99,9 +100,9 @@
                         // 压缩时的放大系数，默认为1，如果增大，代表图像的尺寸会变大(最大不会超过原图)
                         compressScaleRatio: +(document.getElementById('compressScaleRatio').value) || 1,
                         // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
-                        iphoneFixedRatio: +(document.getElementById('iphoneFixedRatio').value) || 2,
+                        iphoneFixedRatio: +(document.getElementById('iphoneFixedRatio').value) || 1.5,
                         // 是否采用原图像素（不会改变大小）
-                        isUseOriginSize: !!(document.getElementById('isUseOriginSize').value) || false,
+                        isUseOriginSize: (document.getElementById('isUseOriginSize').value === 'true') || false,
                         // 增加最大宽度，增加后最大不会超过这个宽度
                         maxWidth: +(document.getElementById('maxWidth').value) || 0,
                         // 使用强制的宽度，如果使用，其它宽高比系数都会失效，默认整图使用这个宽度
@@ -157,10 +158,28 @@
 
                 newImg.onload = function() {
                     targetImgDom.src = newBase64;
-
-                    console.log('压缩前w:' + img.width + ',h:' + img.height);
-                    console.log('压缩后w:' + newImg.width + ',h:' + newImg.height);
+                    
+                    var tips = '压缩前w:' + img.width + ',h:' + img.height;
+                    
+                    tips += '，大小：' + getImgDataSize(sourceBase64);
+                    tips += '---压缩后w:' + newImg.width + ',h:' + newImg.height;
+                    tips += '，大小：' + getImgDataSize(newBase64);
+                    
+                    document.getElementById('tips').innerText = tips;
                 };
+            }
+            
+            function getImgDataSize(imgData) {
+                var len = imgData.length;
+                var sizeStr = len + 'B';
+
+                if (len > 1024 * 1024) {
+                    sizeStr = (Math.round(len / (1024 * 1024))).toString() + 'MB';
+                } else if (len > 1024) {
+                    sizeStr = (Math.round(len / 1024)).toString() + 'KB';
+                }
+
+                return sizeStr;
             }
         </script>
     </body>

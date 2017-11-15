@@ -24,7 +24,7 @@ const defaultArgsCompress = {
     // 压缩时的放大系数，默认为1，如果增大，代表图像的尺寸会变大(最大不会超过原图)
     compressScaleRatio: 1,
     // ios的iPhone下主动放大一定系数以解决分辨率过小的模糊问题
-    iphoneFixedRatio: 2,
+    iphoneFixedRatio: 1.5,
     // 是否采用原图像素（不会改变大小）
     isUseOriginSize: false,
     // 增加最大宽度，增加后最大不会超过这个宽度
@@ -96,6 +96,19 @@ export default function scaleMixin(ImageScale) {
 
         return canvasTransfer.toDataURL(finalArgs.mime, 0.9);
     };
+    
+    function getPixelRatio(context) {
+        const backingStore = context.backingStorePixelRatio ||
+            context.webkitBackingStorePixelRatio ||
+            context.mozBackingStorePixelRatio ||
+            context.msBackingStorePixelRatio ||
+            context.oBackingStorePixelRatio ||
+            context.backingStorePixelRatio || 1;
+
+        const ratio = (window.devicePixelRatio || 1) / backingStore;
+        
+        return ratio;
+    }
 
     /**
      * 压缩图片，返回一个base64字符串
@@ -113,7 +126,7 @@ export default function scaleMixin(ImageScale) {
         const canvasTransfer = document.createElement('canvas');
         const ctxTransfer = canvasTransfer.getContext('2d');
 
-        let ratio = window.devicePixelRatio || 1;
+        let ratio = getPixelRatio(ctxTransfer);
 
         ratio *= finalArgs.compressScaleRatio || 1;
         if (navigator.userAgent.match(/(iPhone\sOS)\s([\d_]+)/)) {
