@@ -4,6 +4,10 @@
 
 单独打包为`img-scale`模块
 
+## 示例
+
+[https://dailc.github.io/image-process/examples/scale.html](https://dailc.github.io/image-process/examples/scale.html)
+
 ## 引入
 
 ```js

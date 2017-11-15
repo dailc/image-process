@@ -4,6 +4,10 @@
 
 单独打包为`img-clip`模块
 
+## 示例
+
+[https://dailc.github.io/image-process/examples/clip.html](https://dailc.github.io/image-process/examples/clip.html)
+
 ## 引入
 
 ```js
