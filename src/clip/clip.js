@@ -30,8 +30,12 @@ const defaultetting = {
     maxCssHeight: null,
     // 是否采用原图像素（不会压缩）
     isUseOriginSize: false,
+    // 增加最大宽度，增加后最大不会超过这个宽度
+    maxWidth: null,
     // 使用强制的宽度，如果使用，其它宽高比系数都会失效，默认整图使用这个宽度
     forceWidth: null,
+    // 同上，但是一般不建议设置，因为很可能会改变宽高比导致拉升，特殊场景下使用
+    forceHeight: null,
     mime: 'image/jpeg',
 };
 
@@ -71,7 +75,7 @@ class ImgClip {
             context.backingStorePixelRatio || 1;
 
         let ratio = (window.devicePixelRatio || 1) / backingStore;
-        
+
         ratio *= this.options.compressScaleRatio || 1;
         if (this.os.ios && this.os.iphone) {
             ratio *= this.options.iphoneFixedRatio || 1;
@@ -82,7 +86,7 @@ class ImgClip {
 
     clear() {
         const lenD = this.domChildren && this.domChildren.length || 0;
-        
+
         for (let i = 0; i < lenD; i += 1) {
             this.container.removeChild(this.domChildren[i]);
         }
@@ -121,13 +125,13 @@ class ImgClip {
         const wPerH = width / height;
         let legalWidth = this.oldWidth;
         let legalHeight = legalWidth / wPerH;
-        
+
         if (maxCssHeight && legalHeight > maxCssHeight) {
             legalHeight = maxCssHeight;
             legalWidth = legalHeight * wPerH;
         }
         this.marginLeft = (this.oldWidth - legalWidth) / 2;
-        
+
         this.canvasFull.style.width = `${legalWidth}px`;
         this.canvasFull.style.height = `${legalHeight}px`;
         this.canvasFull.style.marginLeft = `${this.marginLeft}px`;
@@ -196,7 +200,7 @@ class ImgClip {
 
     resizeClip() {
         this.clipEventState = {};
-         
+
         const saveEventState = (e) => {
             this.clipEventState.width = this.clipRect.offsetWidth;
             this.clipEventState.height = this.clipRect.offsetHeight;
@@ -218,7 +222,7 @@ class ImgClip {
 
             this.curX = curX;
             this.curY = curY;
-            
+
             return {
                 curX,
                 curY,
@@ -303,7 +307,7 @@ class ImgClip {
 
         this.events.touchmove = moving;
         this.events.mousemove = moving;
-        
+
         const startResize = (e) => {
             this.canResizing = true;
             this.canvasMag.classList.remove('clip-hidden');
@@ -376,7 +380,7 @@ class ImgClip {
         const offsetHeight = this.clipRect.offsetHeight;
         const offsetRight = offsetLeft + offsetWidth;
         const offsetBottom = offsetTop + offsetHeight;
-        
+
         let srcX = offsetLeft;
         let srcY = offsetTop;
         let sWidth = offsetWidth;
@@ -468,16 +472,16 @@ class ImgClip {
         const sHeight = captureRadius * 2;
         let srcX = centerPoint.x - captureRadius;
         let srcY = centerPoint.y - captureRadius;
-        
+
         if (this.rotateStep & 1) {
             this.ctxMag.clearRect(0, 0, this.canvasMag.height, this.canvasMag.width);
         } else {
             this.ctxMag.clearRect(0, 0, this.canvasMag.width, this.canvasMag.height);
         }
-        
+
         let drawX = 0;
         let drawY = 0;
-        
+
         if (this.os.ios) {
             // 兼容ios的Safari不能绘制srcX,srcY为负的情况
             if (srcY < 0) {
@@ -491,12 +495,12 @@ class ImgClip {
                 srcX = 0;
             }
         }
-        
+
         // 生成新的图片,内部坐标会使用原图片的尺寸
         this.ctxMag.drawImage(this.img, srcX / this.scale, srcY / this.scale,
             sWidth / this.scale, sHeight / this.scale,
             drawX, drawY, this.canvasMag.width, this.canvasMag.height);
-            
+
         const centerX = this.canvasMag.width / 2;
         const centerY = this.canvasMag.height / 2;
         const radius = 5 * this.RATIO_PIXEL;
@@ -549,7 +553,9 @@ class ImgClip {
 
     getRealFinalImgSize(curWidth, curHeight) {
         const wPerH = this.canvasFull.width / this.canvasFull.height;
+        const maxWidth = this.options.maxWidth || 0;
         const forceWidth = this.options.forceWidth || 0;
+        const forceHeight = this.options.forceHeight || 0;
         let width = curWidth;
         let height = curHeight;
 
@@ -559,20 +565,31 @@ class ImgClip {
                 width = this.img.width * curWidth / this.canvasFull.height;
                 height = this.img.height * curHeight / this.canvasFull.width;
             }
-           
+            if (maxWidth && this.canvasFull.height > maxWidth && maxWidth < this.img.height) {
+                // 使用最大宽，前提是原始大小也大于最大宽
+                width = maxWidth * curWidth / this.canvasFull.height;
+                height = maxWidth / wPerH * curHeight / this.canvasFull.width;
+            }
             if (forceWidth) {
                 // 使用固定宽
                 width = forceWidth * curWidth / this.canvasFull.height;
-                height = forceWidth / wPerH * curHeight / this.canvasFull.width;
+                height = (forceHeight || forceWidth / wPerH) * curHeight / this.canvasFull.width;
             }
-        } else if (this.options.isUseOriginSize || this.canvasFull.width > this.img.width) {
-            // 最大不会超过原图的尺寸
-            width = this.img.width * curWidth / this.canvasFull.width;
-            height = this.img.height * curHeight / this.canvasFull.height;
-        } else if (forceWidth) {
-            // 使用固定宽
-            width = forceWidth * curWidth / this.canvasFull.width;
-            height = forceWidth / wPerH * curHeight / this.canvasFull.height;
+        } else {
+            if (this.options.isUseOriginSize || this.canvasFull.width > this.img.width) {
+                // 最大不会超过原图的尺寸
+                width = this.img.width * curWidth / this.canvasFull.width;
+                height = this.img.height * curHeight / this.canvasFull.height;
+            }
+            if (maxWidth && this.canvasFull.width > maxWidth && maxWidth < this.img.width) {
+                width = maxWidth * curWidth / this.canvasFull.width;
+                height = maxWidth / wPerH * curHeight / this.canvasFull.height;
+            }
+            if (forceWidth) {
+                // 使用固定宽
+                width = forceWidth * curWidth / this.canvasFull.width;
+                height = (forceHeight || forceWidth / wPerH) * curHeight / this.canvasFull.height;
+            }
         }
 
         return {

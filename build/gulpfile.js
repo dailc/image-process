@@ -72,6 +72,25 @@ gulp.task('build_clip', () => walkByRollup([{
     sourcemap: isSourceMap,
 }]));
 
+gulp.task('build_scale', () => walkByRollup([{
+    input: resolvePath(`${SOURCE_ROOT_PATH}/scale/index.js`),
+    plugins: [
+        eslint({
+            exclude: 'node_modules/**',
+        }),
+        babel({
+            exclude: 'node_modules/**',
+        }),
+    ],
+    output: {
+        file: resolvePath(`${RELEASE_ROOT_PATH}/image-scale.js`),
+    },
+    format: 'umd',
+    name: 'ImageScale',
+    banner,
+    sourcemap: isSourceMap,
+}]));
+
 // eslint代码检查打包文件以外的文件
 gulp.task('eslint_others', () => gulp.src([
     resolvePath('build/**/*.js'),
@@ -96,7 +115,7 @@ gulp.task('concat_css_clip', () => gulp.src([
     .pipe(gulpConcat('image-clip.css'))
     .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
 
-gulp.task('build', ['build_main', 'build_clip', 'concat_css', 'concat_css_clip', 'eslint_others']);
+gulp.task('build', ['build_main', 'build_clip', 'build_scale', 'concat_css', 'concat_css_clip', 'eslint_others']);
 
 gulp.task('dist_js_uglify', () => gulp.src([
     resolvePath(`${RELEASE_ROOT_PATH}/**/*.js`),

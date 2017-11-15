@@ -228,8 +228,9 @@
                             // 0代表按下才显示，1恒显示，-1不显示
                             sizeTipsStyle: 0,
                             // 为1一般是屏幕像素x2这个宽高
+                            // 最终的大小为：选择框像素*屏幕像素比（手机中一般为2）*compressScaleRatio
                             compressScaleRatio: 1.1,
-                            // iphone中是否继续放大（会基于已有的继续放大，有时候不放大拍出来会模糊）
+                            // iphone中是否继续放大：x*iphoneFixedRatio
                             // 最好compressScaleRatio*iphoneFixedRatio不要超过2
                             iphoneFixedRatio: 1.8,
                             // 减去顶部间距，底部bar,以及显示间距
@@ -238,8 +239,12 @@
                             captureRadius: 30,
                             // 是否采用原图像素（不会压缩）
                             isUseOriginSize: false,
+                            // 增加最大宽度，增加后最大不会超过这个宽度
+                            maxWidth: 2000,
                             // 是否固定框高，优先级最大，设置后其余所有系数都无用直接使用这个固定的宽，高度自适应
                             forceWidth: 0,
+                            // 同上，但是一般不建议设置，因为很可能会改变宽高比导致拉升，特殊场景下使用
+                            forceHeight: 0,
                             // 压缩质量
                             quality: 0.92,
                             mime: 'image/jpeg',

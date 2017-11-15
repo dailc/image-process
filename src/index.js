@@ -1,7 +1,5 @@
-import scaleMixin from './api/scale';
-
 const ImageProcess = {};
 
-scaleMixin(ImageProcess);
+// TODO: 需要添加一些图像处理方法
 
 export default ImageProcess;

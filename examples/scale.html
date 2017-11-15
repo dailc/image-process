@@ -49,7 +49,7 @@
             </div>
         </div>
         <script type="text/javascript" src="./_common/fileinput.js"></script>
-        <script type="text/javascript" src="./../dist/image-process.js"></script>
+        <script type="text/javascript" src="./../dist/image-scale.js"></script>
         <script>
             var sourceImg;
             var canvasHandle;
@@ -147,7 +147,7 @@
                 if (processType === false) {
                     newBase64 = sourceBase64
                 } else {
-                    newBase64 = ImageProcess.scaleImage(img, {
+                    newBase64 = ImageScale.scaleImage(img, {
                         mime: mime,
                         width: canvasHandle.width,
                         height: canvasHandle.height,

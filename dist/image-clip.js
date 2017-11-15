@@ -141,8 +141,12 @@ var defaultetting = {
     maxCssHeight: null,
     // 是否采用原图像素（不会压缩）
     isUseOriginSize: false,
+    // 增加最大宽度，增加后最大不会超过这个宽度
+    maxWidth: null,
     // 使用强制的宽度，如果使用，其它宽高比系数都会失效，默认整图使用这个宽度
     forceWidth: null,
+    // 同上，但是一般不建议设置，因为很可能会改变宽高比导致拉升，特殊场景下使用
+    forceHeight: null,
     mime: 'image/jpeg'
 };
 
@@ -666,7 +670,9 @@ var ImgClip$1 = function () {
         key: 'getRealFinalImgSize',
         value: function getRealFinalImgSize(curWidth, curHeight) {
             var wPerH = this.canvasFull.width / this.canvasFull.height;
+            var maxWidth = this.options.maxWidth || 0;
             var forceWidth = this.options.forceWidth || 0;
+            var forceHeight = this.options.forceHeight || 0;
             var width = curWidth;
             var height = curHeight;
 
@@ -676,20 +682,31 @@ var ImgClip$1 = function () {
                     width = this.img.width * curWidth / this.canvasFull.height;
                     height = this.img.height * curHeight / this.canvasFull.width;
                 }
-
+                if (maxWidth && this.canvasFull.height > maxWidth && maxWidth < this.img.height) {
+                    // 使用最大宽，前提是原始大小也大于最大宽
+                    width = maxWidth * curWidth / this.canvasFull.height;
+                    height = maxWidth / wPerH * curHeight / this.canvasFull.width;
+                }
                 if (forceWidth) {
                     // 使用固定宽
                     width = forceWidth * curWidth / this.canvasFull.height;
-                    height = forceWidth / wPerH * curHeight / this.canvasFull.width;
+                    height = (forceHeight || forceWidth / wPerH) * curHeight / this.canvasFull.width;
                 }
-            } else if (this.options.isUseOriginSize || this.canvasFull.width > this.img.width) {
-                // 最大不会超过原图的尺寸
-                width = this.img.width * curWidth / this.canvasFull.width;
-                height = this.img.height * curHeight / this.canvasFull.height;
-            } else if (forceWidth) {
-                // 使用固定宽
-                width = forceWidth * curWidth / this.canvasFull.width;
-                height = forceWidth / wPerH * curHeight / this.canvasFull.height;
+            } else {
+                if (this.options.isUseOriginSize || this.canvasFull.width > this.img.width) {
+                    // 最大不会超过原图的尺寸
+                    width = this.img.width * curWidth / this.canvasFull.width;
+                    height = this.img.height * curHeight / this.canvasFull.height;
+                }
+                if (maxWidth && this.canvasFull.width > maxWidth && maxWidth < this.img.width) {
+                    width = maxWidth * curWidth / this.canvasFull.width;
+                    height = maxWidth / wPerH * curHeight / this.canvasFull.height;
+                }
+                if (forceWidth) {
+                    // 使用固定宽
+                    width = forceWidth * curWidth / this.canvasFull.width;
+                    height = (forceHeight || forceWidth / wPerH) * curHeight / this.canvasFull.height;
+                }
             }
 
             return {

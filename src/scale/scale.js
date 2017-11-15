@@ -16,8 +16,8 @@ const defaultArgs = {
     processType: 0,
 };
 
-export default function scaleMixin(ImageProcess) {
-    const api = ImageProcess;
+export default function scaleMixin(ImageScale) {
+    const api = ImageScale;
     
     /**
      * 对img对象进行缩放，返回一个base64字符串
@@ -57,8 +57,8 @@ export default function scaleMixin(ImageProcess) {
             0, 0, 0, 0,
             canvasTransfer.width, canvasTransfer.height);
         
-        console.log(imageData);
-        console.log(newImageData);
+        // console.log(imageData);
+        // console.log(newImageData);
         // console.log('压缩时w:' + canvasTransfer.width + ',' + canvasTransfer.height);
         
         return canvasTransfer.toDataURL(finalArgs.mime, 0.9);
