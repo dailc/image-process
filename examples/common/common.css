@@ -1,0 +1,319 @@
+
+
+ul,
+li {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+em,
+u {
+	font-style: normal;
+}
+
+.l {
+	float: left;
+}
+
+.r {
+	float: right;
+}
+
+.center-block {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.clearfix:before,
+.clearfix:after {
+	display: table;
+	line-height: 0;
+	content: "";
+}
+
+.clearfix:after {
+	clear: both;
+}
+
+.hidden {
+	display: none !important;
+}
+
+.invisible {
+	visibility: hidden;
+}
+
+.can-select {
+	-webkit-user-select: text;
+}
+
+.fullscreen {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+.text-center {
+	text-align: center !important;
+}
+
+.text-left {
+	text-align: left !important;
+}
+
+.text-right {
+	text-align: right !important;
+}
+
+.text-justify {
+	text-align: justify !important;
+}
+
+.text-nowrap {
+	white-space: nowrap !important;
+}
+
+.text-ellipsis {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.bg-gray {
+	background-color: #f5f5f5;
+}
+
+.bg-white {
+	background-color: #fff;
+}
+
+.padding10 {
+	padding: 10px;
+}
+
+.padding0 {
+	padding: 0;
+}
+
+.pt10 {
+	padding: 10px;
+}
+
+.pl10 {
+	padding-left: 10px;
+}
+
+.pr10 {
+	padding-right: 10px;
+}
+
+.pb10 {
+	padding-bottom: 10px;
+}
+
+.margin10 {
+	margin: 10px;
+}
+
+.margin0 {
+	margin: 0;
+}
+
+.mt10 {
+	margin-top: 10px;
+}
+
+.ml10 {
+	margin-left: 10px;
+}
+
+.mb10 {
+	margin-bottom: 10px;
+}
+
+.mr10 {
+	margin-right: 10px;
+}
+
+.border-none {
+	border: none;
+}
+
+.clamp2 {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	text-overflow: ellipsis;
+}
+
+.uppercase {
+	text-transform: uppercase;
+}
+
+.lowercase {
+	text-transform: lowercase;
+}
+
+.upload-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -57px;
+    margin-top: -57px;
+}
+
+/**
+ * 文件选择按钮美化
+ */
+.upload-pretty {
+    position: relative;
+    left: 0;
+    top: 0;
+    /*盒模型*/
+    display: block;
+    /*padding: 10px;*/
+    overflow: hidden;
+    /*文字排版*/
+    /*font-size: 16px;
+    color: #000000;*/
+    /*视觉外观*/
+    /*background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 5px;*/
+}
+.upload-pretty:hover {
+    /*color: #333;
+    background: #eee;
+    border-color: #ccc;
+    text-decoration: none;*/
+}
+.upload-pretty input {
+    /*定位相关*/
+    position: absolute;
+    top: 0;
+    right: 0;
+    /*文字排版*/
+    /*这一点很重要,设置字体后,input宽度会变宽,否则无法充满父级div
+     具体为font-size越大,越宽,一般认为100px就足矣*/
+    font-size: 100px;
+    /*其它*/
+    opacity: 0;
+    cursor: pointer;
+}
+/**
+ * tab布局，不采用mui重新写
+ */
+
+.nav-bar {
+    position: fixed;
+    z-index: 10;
+    right: 0;
+    left: 0;
+    height: 44px;
+    padding-right: 10px;
+    padding-left: 10px;
+    border-bottom: 0;
+    background-color: #f7f7f7;
+    -webkit-box-shadow: 0 0 1px rgba(0,0,0,.85);
+    box-shadow: 0 0 1px rgba(0,0,0,.85);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+.nav-bar-tab {
+    bottom: 0;
+    display: table;
+    width: 100%;
+    height: 50px;
+    padding: 0;
+    table-layout: fixed;
+    border-top: 0;
+    border-bottom: 0;
+    -webkit-touch-callout: none;
+}
+.tab-item {
+    display: table-cell;
+    overflow: hidden;
+    width: 1%;
+    height: 50px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #000;
+}
+
+.nav-bar-tab .tab-item:active {
+    background: #D3D3D3;
+}
+
+.nav-bar-tab .tab-icon {
+    font-size: 28px;
+    position: relative;
+    z-index: 20;
+    top: 3px;
+    width: 24px;
+    height: 24px;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.nav-bar-tab .tab-item .mui-icon~.tab-label {
+    font-size: 11px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-bar-tab .tab-item .mui-icon.rotate90 {
+    -webkit-transform:scaleX(-1);
+    transform:scaleX(-1);
+}
+
+
+/**
+ * 立体风格按钮
+ */
+.button-three-dimen {
+    display: block;
+    zoom: 1;
+    vertical-align: baseline;
+    margin: 0 2px;
+    outline: none;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font: 14px/100% Arial, Helvetica, sans-serif;
+    padding: .5em 2em .55em;
+    text-shadow: 0 1px 1px rgba(0,0,0,.3);
+    -webkit-border-radius: .5em;
+    -moz-border-radius: .5em;
+    border-radius: .5em;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    
+    color: #606060;
+    border: solid 1px #b7b7b7;
+    background: #fff;
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ededed));
+    background: -moz-linear-gradient(top, #fff, #ededed);
+}
+
+.button-three-dimen:hover {
+    text-decoration: none;
+    background: #ededed;
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#dcdcdc));
+    background: -moz-linear-gradient(top,  #fff,  #dcdcdc);
+}
+.button-three-dimen:active {
+    position: relative;
+    top: 1px;
+    color: #999;
+    background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#fff));
+    background: -moz-linear-gradient(top,  #ededed,  #fff);
+}

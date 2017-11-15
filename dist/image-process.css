@@ -32,7 +32,7 @@
     display: none;
 }
 
-.clip-rect {
+.img-clip .clip-rect {
     position: absolute;
     border: 1px dashed #de3c50;
     top: 10px;
@@ -41,7 +41,7 @@
     height: 100px;
 }
 
-.clip-rect .clip-tips {
+.img-clip .clip-rect .clip-tips {
     position: absolute;
     top: -40px;
     left: 0;
@@ -52,7 +52,7 @@
     color: #fff;
 }
 
-.clip-rect-horn {
+.img-clip .clip-rect-horn {
     position: absolute;
     display: block;
     background-color: rgba(222, 60, 80, .7);
@@ -61,53 +61,53 @@
     height: 20px;
 }
 
-.horn-n {
+.img-clip .horn-n {
     top: -10px;
     left: 50%;
     margin-left: -10px;
     cursor: n-resize;
 }
 
-.horn-s {
+.img-clip .horn-s {
     bottom: -10px;
     left: 50%;
     margin-left: -10px;
     cursor: s-resize;
 }
 
-.horn-w {
+.img-clip .horn-w {
     top: 50%;
     left: -10px;
     margin-top: -10px;
     cursor: w-resize;
 }
 
-.horn-e {
+.img-clip .horn-e {
     top: 50%;
     right: -10px;
     margin-top: -10px;
     cursor: e-resize;
 }
 
-.horn-nw {
+.img-clip .horn-nw {
     top: -10px;
     left: -10px;
     cursor: nw-resize;
 }
 
-.horn-ne {
+.img-clip .horn-ne {
     top: -10px;
     right: -10px;
     cursor: ne-resize;
 }
 
-.horn-sw {
+.img-clip .horn-sw {
     bottom: -10px;
     left: -10px;
     cursor: sw-resize;
 }
 
-.horn-se {
+.img-clip .horn-se {
     bottom: -10px;
     right: -10px;
     cursor: se-resize;

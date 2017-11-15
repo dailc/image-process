@@ -8,6 +8,14 @@
 
 [https://dailc.github.io/image-process/examples/clip.html](https://dailc.github.io/image-process/examples/clip.html)
 
+## 效果
+
+![](../../screenshot/imageclip1.png)
+![](../../screenshot/imageclip2.png)
+![](../../screenshot/imageclip3.png)
+![](../../screenshot/imageclip4.png)
+![](../../screenshot/imageclip.gif)
+
 ## 引入
 
 ```js

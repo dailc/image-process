@@ -10,6 +10,10 @@
 
 [https://dailc.github.io/image-process/examples/scale_compress.html](https://dailc.github.io/image-process/examples/scale_compress.html)
 
+## 效果
+
+![](../../screenshot/imagescale1.png)
+
 ## 引入
 
 ```js
