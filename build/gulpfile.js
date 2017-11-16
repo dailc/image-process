@@ -8,6 +8,7 @@ const gulpCleanCSS = require('gulp-clean-css');
 const gulpEslint = require('gulp-eslint');
 const gulpRename = require('gulp-rename');
 const gulpHeader = require('gulp-header');
+const gulpStylus = require('gulp-stylus');
 const babel = require('rollup-plugin-babel');
 const eslint = require('rollup-plugin-eslint');
 const pkg = require('../package.json');
@@ -104,14 +105,16 @@ gulp.task('eslint_others', () => gulp.src([
 // .pipe(gulpEslint.failAfterError());
 
 gulp.task('concat_css', () => gulp.src([
-    resolvePath(`${SOURCE_ROOT_PATH}/**/*.css`),
+    resolvePath(`${SOURCE_ROOT_PATH}/styl/index.styl`),
 ])
+    .pipe(gulpStylus())
     .pipe(gulpConcat('image-process.css'))
     .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
-
+    
 gulp.task('concat_css_clip', () => gulp.src([
-    resolvePath(`${SOURCE_ROOT_PATH}/clip/css/*.css`),
+    resolvePath(`${SOURCE_ROOT_PATH}/clip/styl/index.styl`),
 ])
+    .pipe(gulpStylus())
     .pipe(gulpConcat('image-clip.css'))
     .pipe(gulp.dest(resolvePath(RELEASE_ROOT_PATH))));
 
