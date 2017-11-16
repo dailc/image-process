@@ -155,7 +155,7 @@ gulp.task('default', (callback) => {
 gulp.task('watch', () => {
     gulp.watch([
         resolvePath(`${SOURCE_ROOT_PATH}/**/*.js`),
-        resolvePath(`${SOURCE_ROOT_PATH}/**/*.css`),
+        resolvePath(`${SOURCE_ROOT_PATH}/**/*.styl`),
         resolvePath('build/**/*.js'),
         resolvePath('test/**/*.js'),
     ], ['default']);
