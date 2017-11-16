@@ -2,11 +2,25 @@
 
 图像的裁剪压缩
 
-单独打包为`img-clip`模块
+功能包括：
+
+- `canvas`绘制图片
+
+- 裁剪框选择裁剪大小
+
+- 旋转功能
+
+- 放大镜（方便旋转）
+
+- 裁剪功能
+
+- 缩放、压缩功能（通过参数控制）
 
 ## 示例
 
 [https://dailc.github.io/image-process/examples/clip.html](https://dailc.github.io/image-process/examples/clip.html)
+
+![](../../screenshot/qrcode_clip.png)
 
 ## 效果
 
@@ -16,7 +30,9 @@
 ![](../../screenshot/imageclip4.png)
 ![](../../screenshot/imageclip.gif)
 
-## 引入
+## 使用
+
+引入
 
 ```js
 dist/image-clip.css

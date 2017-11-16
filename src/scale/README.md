@@ -2,7 +2,11 @@
 
 图像的缩放
 
-单独打包为`img-scale`模块
+功能包括：
+
+- 图像的缩放、压缩
+
+- 一些常用的缩放算法（双立方，双线性，近邻）
 
 ## 示例
 
@@ -10,11 +14,15 @@
 
 [https://dailc.github.io/image-process/examples/scale_compress.html](https://dailc.github.io/image-process/examples/scale_compress.html)
 
+![](../../screenshot/qrcode_scale1.png)
+
 ## 效果
 
 ![](../../screenshot/imagescale1.png)
 
-## 引入
+## 使用
+
+引入
 
 ```js
 dist/image-scale.js
