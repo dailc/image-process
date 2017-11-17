@@ -1,6 +1,6 @@
 {
   "name": "image-process",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "图像裁剪，图像缩放(最邻近插值，双线性差值，三次卷积插值)，图像滤镜（灰度，模糊，锐化，卡通），应用（边缘识别，水印）等",
   "homepage": "https://github.com/dailc/image-process",
   "repository": {

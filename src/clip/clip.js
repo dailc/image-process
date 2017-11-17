@@ -17,6 +17,8 @@ const defaultetting = {
     isSmooth: true,
     // 放大镜捕获的图像半径
     captureRadius: 30,
+    // 移动矩形框时的最小间距
+    minMoveDiff: 1,
     // 压缩质量
     quality: 0.92,
     mime: 'image/jpeg',
@@ -199,6 +201,12 @@ class ImgClip {
     }
 
     resizeClip() {
+        this.listenerHornsResize();
+        this.listenerRectMove();
+        this.listenerContainerLeave();
+    }
+    
+    listenerHornsResize() {
         this.clipEventState = {};
 
         const saveEventState = (e) => {
@@ -228,6 +236,8 @@ class ImgClip {
                 curY,
             };
         };
+        this.getCurXY = getCurXY;
+        
         const moving = (e) => {
             if (!this.canResizing) {
                 return;
@@ -307,7 +317,7 @@ class ImgClip {
 
         this.events.touchmove = moving;
         this.events.mousemove = moving;
-
+        
         const startResize = (e) => {
             this.canResizing = true;
             this.canvasMag.classList.remove('clip-hidden');
@@ -323,6 +333,8 @@ class ImgClip {
                 this.clipTips.classList.add('clip-hidden');
             }
         };
+        
+        this.endHronsResize = endResize;
 
         for (let i = 0; i < 8; i += 1) {
             this.clipRectHorns[i].addEventListener('mousedown', startResize);
@@ -331,11 +343,94 @@ class ImgClip {
             this.clipRectHorns[i].addEventListener('mouseup', endResize);
             this.clipRectHorns[i].addEventListener('touchend', endResize);
         }
+    }
+    
+    listenerRectMove() {
+        const rectDom = this.clipRect;
+        
+        const moving = (e) => {
+            if (this.canResizing || !this.canMove) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            const MIN_DIFF = this.options.minMoveDiff;
+            const mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+            const mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+            
+            const diffX = mouseX - this.prevRectMouseX;
+            const diffY = mouseY - this.prevRectMouseY;
+            
+            if (!diffX && !diffY) {
+                return;
+            }
+            
+            if (Math.abs(diffX) > MIN_DIFF || Math.abs(diffY) > MIN_DIFF) {
+                this.prevRectMouseX = mouseX;
+                this.prevRectMouseY = mouseY;
+            }
+            
+            let top = rectDom.offsetTop + diffY;
+            let left = rectDom.offsetLeft + diffX;
+            
+            if (top < 0) {
+                top = 0;
+            } else if (top > this.canvasFull.offsetHeight - rectDom.offsetHeight) {
+                top = this.canvasFull.offsetHeight - rectDom.offsetHeight;
+            }
+            
+            if (left < this.marginLeft) {
+                left = this.marginLeft;
+            } else if (left > this.canvasFull.offsetWidth - rectDom.offsetWidth + this.marginLeft) {
+                left = this.canvasFull.offsetWidth - rectDom.offsetWidth + this.marginLeft;
+            }
+            
+            // 这里无须再补上marginLeft
+            this.clipRect.style.left = `${left}px`;
+            this.clipRect.style.top = `${top}px`;
+            this.draw();
+        };
+        
+        rectDom.addEventListener('touchmove', moving);
+        rectDom.addEventListener('mousemove', moving);
+        
+        const startMove = (e) => {
+            this.canMove = true;
+            
+            const mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+            const mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+            
+            this.prevRectMouseX = mouseX;
+            this.prevRectMouseY = mouseY;
+        };
+        
+        const endMove = () => {
+            this.canMove = false;
+        };
+        
+        this.endRectMove = endMove;
+        
+        rectDom.addEventListener('mousedown', startMove);
+        rectDom.addEventListener('touchstart', startMove);
+        
+        rectDom.addEventListener('mouseup', endMove);
+        rectDom.addEventListener('touchend', endMove);
+    }
+    
+    listenerContainerLeave() {
+        const leaveContainer = () => {
+            if (this.canResizing) {
+                this.endHronsResize();
+            }
+            if (this.canMove) {
+                this.endRectMove();
+            }
+        };
 
-        this.container.addEventListener('mouseleave', endResize);
-        this.container.addEventListener('mouseup', endResize);
-        this.events.mouseleave = endResize;
-        this.events.mouseup = endResize;
+        this.container.addEventListener('mouseleave', leaveContainer);
+        this.container.addEventListener('mouseup', leaveContainer);
+        this.events.mouseleave = leaveContainer;
+        this.events.mouseup = leaveContainer;
     }
 
     draw() {

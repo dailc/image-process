@@ -135,6 +135,8 @@ var defaultetting = {
     isSmooth: true,
     // 放大镜捕获的图像半径
     captureRadius: 30,
+    // 移动矩形框时的最小间距
+    minMoveDiff: 1,
     // 压缩质量
     quality: 0.92,
     mime: 'image/jpeg',
@@ -322,6 +324,13 @@ var ImgClip$1 = function () {
     }, {
         key: 'resizeClip',
         value: function resizeClip() {
+            this.listenerHornsResize();
+            this.listenerRectMove();
+            this.listenerContainerLeave();
+        }
+    }, {
+        key: 'listenerHornsResize',
+        value: function listenerHornsResize() {
             var _this = this;
 
             this.clipEventState = {};
@@ -353,6 +362,8 @@ var ImgClip$1 = function () {
                     curY: curY
                 };
             };
+            this.getCurXY = getCurXY;
+
             var moving = function moving(e) {
                 if (!_this.canResizing) {
                     return;
@@ -443,6 +454,8 @@ var ImgClip$1 = function () {
                 }
             };
 
+            this.endHronsResize = endResize;
+
             for (var i = 0; i < 8; i += 1) {
                 this.clipRectHorns[i].addEventListener('mousedown', startResize);
                 this.clipRectHorns[i].addEventListener('touchstart', startResize);
@@ -450,11 +463,100 @@ var ImgClip$1 = function () {
                 this.clipRectHorns[i].addEventListener('mouseup', endResize);
                 this.clipRectHorns[i].addEventListener('touchend', endResize);
             }
+        }
+    }, {
+        key: 'listenerRectMove',
+        value: function listenerRectMove() {
+            var _this2 = this;
 
-            this.container.addEventListener('mouseleave', endResize);
-            this.container.addEventListener('mouseup', endResize);
-            this.events.mouseleave = endResize;
-            this.events.mouseup = endResize;
+            var rectDom = this.clipRect;
+
+            var moving = function moving(e) {
+                if (_this2.canResizing || !_this2.canMove) {
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                var MIN_DIFF = _this2.options.minMoveDiff;
+                var mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+                var mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+
+                var diffX = mouseX - _this2.prevRectMouseX;
+                var diffY = mouseY - _this2.prevRectMouseY;
+
+                if (!diffX && !diffY) {
+                    return;
+                }
+
+                if (Math.abs(diffX) > MIN_DIFF || Math.abs(diffY) > MIN_DIFF) {
+                    _this2.prevRectMouseX = mouseX;
+                    _this2.prevRectMouseY = mouseY;
+                }
+
+                var top = rectDom.offsetTop + diffY;
+                var left = rectDom.offsetLeft + diffX;
+
+                if (top < 0) {
+                    top = 0;
+                } else if (top > _this2.canvasFull.offsetHeight - rectDom.offsetHeight) {
+                    top = _this2.canvasFull.offsetHeight - rectDom.offsetHeight;
+                }
+
+                if (left < _this2.marginLeft) {
+                    left = _this2.marginLeft;
+                } else if (left > _this2.canvasFull.offsetWidth - rectDom.offsetWidth + _this2.marginLeft) {
+                    left = _this2.canvasFull.offsetWidth - rectDom.offsetWidth + _this2.marginLeft;
+                }
+
+                // 这里无须再补上marginLeft
+                _this2.clipRect.style.left = left + 'px';
+                _this2.clipRect.style.top = top + 'px';
+                _this2.draw();
+            };
+
+            rectDom.addEventListener('touchmove', moving);
+            rectDom.addEventListener('mousemove', moving);
+
+            var startMove = function startMove(e) {
+                _this2.canMove = true;
+
+                var mouseY = e.touches ? e.touches[0].pageY : e.pageY;
+                var mouseX = e.touches ? e.touches[0].pageX : e.pageX;
+
+                _this2.prevRectMouseX = mouseX;
+                _this2.prevRectMouseY = mouseY;
+            };
+
+            var endMove = function endMove() {
+                _this2.canMove = false;
+            };
+
+            this.endRectMove = endMove;
+
+            rectDom.addEventListener('mousedown', startMove);
+            rectDom.addEventListener('touchstart', startMove);
+
+            rectDom.addEventListener('mouseup', endMove);
+            rectDom.addEventListener('touchend', endMove);
+        }
+    }, {
+        key: 'listenerContainerLeave',
+        value: function listenerContainerLeave() {
+            var _this3 = this;
+
+            var leaveContainer = function leaveContainer() {
+                if (_this3.canResizing) {
+                    _this3.endHronsResize();
+                }
+                if (_this3.canMove) {
+                    _this3.endRectMove();
+                }
+            };
+
+            this.container.addEventListener('mouseleave', leaveContainer);
+            this.container.addEventListener('mouseup', leaveContainer);
+            this.events.mouseleave = leaveContainer;
+            this.events.mouseup = leaveContainer;
         }
     }, {
         key: 'draw',

@@ -29,6 +29,7 @@
   left: 10px;
   width: 100px;
   height: 100px;
+  cursor: move;
 }
 .img-clip .clip-rect .clip-tips {
   position: absolute;
