@@ -53,8 +53,8 @@ module.exports = {
         'indent': [2, 4, {
             'SwitchCase': 1
         }],
-        // 允许特殊的_开头属性
-        'no-underscore-dangle': [2, {
+        // 允许特殊的_开头属性，目前关闭，使用_命名规则代表不公开函
+        'no-underscore-dangle': [0, {
             "allow": ["_handleMessageFromNative"]
         }],
         // 允许位操作

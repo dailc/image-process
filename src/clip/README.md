@@ -53,6 +53,19 @@ var cropImage = new ImageClip(options);
 cropImage.method()
 ```
 
+`img`对象示例
+
+```js
+var img = new Image();
+
+img.src = b64;
+
+img.onload = function() {
+    // 需要在onload中进行操作
+    new ImageClip(...);
+};
+```
+
 ## options配置
 
 | 参数 | 参数类型 | 默认值 |说明 |
